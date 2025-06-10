@@ -16,10 +16,10 @@ An interesting additional benefit we can get with this design is that we could i
 > 
 > 1. **Bob** has 100 YES shares on the market worth $50
 > 2. **Alice** has 100 NO Shares on the market worth $50
-> 3. Open interest (\$100) is sold in open market to get \$100 worth of $REP$. Let's assume $1\;REP = 1$$, meaning we get 100 $REP$ in the sale.
+> 3. Open interest (\$100) is sold in open market to get \$100 worth of $REP$. Let's assume 1 $REP = 1\$$, meaning we get 100 $REP$ in the sale.
 > 4. The market forks and the chain is split into YES and NO universes.
-> 5. On the YES universe, **Bob** can convert their 100 YES shares to 100 $REP_{YES}$. On No Universe, **Bobs** shares are worth 0 $REP_{NO}$.
-> 6. On the No universe, **Alice** can convert their 100 NO shares to 100 $REP_{NO}$. On Yes Universe, **Alices** shares are worth 0 $REP_{YES}$.
+> 5. On the YES universe, **Bob** can convert their 100 YES shares to 100 $REP_{YES}$. On No Universe, **Bob's** shares are worth 0 $REP_{NO}$.
+> 6. On the No universe, **Alice** can convert their 100 NO shares to 100 $REP_{NO}$. On Yes Universe, **Alice's** shares are worth 0 $REP_{YES}$.
 > 7. **Bob** believes that the NO universe is correct even thought they lost, so they continue to trade in Universe NO in the future.
 > 8. **Alice** also believes the NO universe is correct and they continue to trade there. **Alice** sells her $REP_{NO}$ for 100$ and realizes profit of 50$.
 > 
@@ -121,23 +121,21 @@ A more robust approach is to implement time-based fees - fees that increase the 
 #### Bang–Bang Controller
 
 One simple method to implement time-based fee adjustments is via a [**Bang–bang controller**](https://en.wikipedia.org/wiki/Bang%E2%80%93bang_control):
-
-$$
+```math
 \text{Fee Change%} = 
 \begin{cases}
 +\text{increment} & \text{if } \text{open interest} > \text{Target REP Market Cap} \\\\
 0 & \text{if } \text{open interest} = \text{Target REP Market Cap} \\\\
 -\text{increment} & \text{if } \text{open interest} < \text{Target REP Market Cap}
 \end{cases}
-$$
+```
 
 Here, `increment` is a tunable parameter that determines how quickly the fee reacts to changes in open interest. The key is to adjust fast enough to be effective, but not so fast that it causes fee volatility.
 
 The actual **Open Interest Fee (%)** then evolves over time as:
-
-$$
+```math
 \text{New Open Interest Fee%} = \text{Previous Open Interest Fee} + \text{Fee Change%} \cdot \Delta time
-$$
+```
 
 Where:
 * `Fee Change` is the output from the Bang–bang controller
@@ -152,11 +150,9 @@ The `Target REP Market Cap` must always exceed `Open Interest`. If $REP$’s mar
 Even when $REP$ Market Cap equals open interest, it would be practically infeasible to acquire all $REP$ to satisfy the open interest claims. Therefore, the target must be set **significantly higher than open interest** to provide room for fee adjustments and ensure system solvency.
 
 * **Augur V2** uses a target of:
-
-$$
+```math
   \text{Target Market Cap} = 5 \times \text{Open Interest}
-$$
-
+```
 * **Partial Colored Coins** may require a significantly higher multiplier, as in fork scenarios, where the REP market cap and liquidity must withstand large, sudden purchases.
 
 > [!WARNING]
@@ -174,61 +170,48 @@ It is also possible that the fee adjusting controller does not adjust the fee fa
 Instead of auctioning the assets, we could give all the assets to $REP$ holders and mint equal worth of $REP$ tokens to open interest holders. This requires a reliable price oracle for each asset type held by the system. Big advantage here is that this results in zero trading fees for everyone. However, risk that the $REP$ price is being manipulated increases.
 
 Assuming fork does not have an impact on the market cap of $REP$. We need to mint
-
-$$
+```math
 \text{REP Tokens Minted} = \frac{\text{Open Interest}}{\text{REP Token Price}}
-$$
-
+```
 tokens for open interest holders to replace their funds with $REP$, however, this dillutes the token supply and $\text{REP Token Price}$ does not remain constant, the price changes to
-
-$$
+```math
 \text{REP Token Price} = \frac{\text{REP Market Cap}}{\text{REP Token Supply}+\text{REP Tokens Minted}}
-$$
-
+```
 Combining these equations result in number of tokens we need to mint for the assets:
-
-$$
+```math
 \boxed{
     \text{REP Tokens Minted} = \frac{\text{Open Interest} \cdot \text{REP Token Supply}}{\text{REP Market Cap} - \text{Open Interest}}
 }
-$$
-
+```
 It can be seen from the equation that $\text{Open Interest}$ needs to be smaller than $\text{REP Market Cap}$, otherwise it becomes impossible to mint enough $REP$.
 
 #### Multiasset support
 In the multiple asset case scenario, the open interest need to be known separately for each asset:
-
-$$
+```math
 \text{Open Interest}_{asset} \in \{\; \text{Open Interest}_{ETH},\;\text{Open Interest}_{Food}, ... \;\}
-$$
-
+```
 We can then get the minting amount needed:
-
-$$
+```math
 \text{REP Tokens Minted}_{asset} = \frac{\text{Open Interest}_{asset}}{\text{REP Token Price}_{asset}}
-$$
+```
 
-where $\text{REP Token Price}_{asset}$ is $REP$'s token price in asset, however again $\text{REP Token Price}_{asset}$ is a function of $REP$ we mint, not just the amount we need to mint for $asset$ open interest holders:
+where $\text{REP Token Price}_{asset}$ is $REP$ token price in asset, which is again a function of $REP$ we mint, not just the amount we need to mint for $asset$ open interest holders:
 
-$$
+```math
 \text{REP Tokens Minted} = \sum_{a \in \text{all assets}}{\text{REP Tokens Minted}_a}
-$$
-
+```
 We can then get $REP$'s token price in the same unit as the market cap is calculated, e.g., dollars($):
-
-$$
+```math
 \text{REP Token Price}_$ = \frac{\text{REP Market Cap}_$}{\text{REP Token Supply}+\sum_{ a \in \text{all assets} }{\text{REP Tokens Minted}_{a}}}
-$$
-
+```
 We then need to have a price oracle for each $asset$ in dollars:
-
-$$
+```math
 \text{REP Token Price}_{asset} = \frac{\text{REP Token Price}_$}{\text{Asset Token Price}_$}
-$$  
+```
 
 We can then deduce how much $REP$ we need to mint against each collateral:
 
-$$
+```math
 \begin{aligned}
 \text{REP Tokens Minted}_{asset} =\ & 
 \frac{\text{Open Interest}_{asset} \cdot \text{Asset Token Price}_\$}
@@ -236,7 +219,7 @@ $$
 \\[10pt]
 & \cdot \left( \text{REP Token Supply} + \sum_{a \ne asset}{\text{REP Tokens Minted}_a} \right)
 \end{aligned}
-$$
+```
 
 This can be solved in closed form when there's one or two assets, but requires a numerical solution for more assets.
 
@@ -245,10 +228,9 @@ We also need to assume that minting $REP$ and giving the external assets to $REP
 #### Attacking the multiasset system
 
 There's an easy attack you can do to against this system. The system requires that we have a reliable price oracle for each collateral. If we allow users to trade with any asset out there, we cannot guarrantee the asset will have a reliable oracle. Given we have an asset $attack$, and we are able to control its price, we can mint infinite $REP$:
-
-$$
+```math
 \text{REP Tokens Minted}_{asset} =\lim_{\text{REP Token Price}_{attack} \to 0} \frac{\text{Open Interest}_{attack}}{\text{REP Token Price}_{attack}} = \infty
-$$
+```
 
 #### Pro's and cons compared to liquidation
 Pros:
@@ -279,23 +261,21 @@ The $REP$ gained from the open interest auction is very likely worth less than t
 What is the upper limit bonus we can give to traders that won't break incentives? As the forks are disruptive, there could be some kind of escalation game that results in fork to trigger, similarly to Augur v2. In Augur v2 At least $1.25\%$ of $REP$ needs to be destined for $REP_{lie}$ for a fork to happen, and if the $REP$ targeting mechanism is working properly then this means $1.25\%$ of $5 \cdot \text{Open Interest}$, we need to make sure we don't mint more value than $6.25\%$ of open interest. However, this assumes there are no other incentives for attacking the system.
 
 If we assume then we have at most $\text{Total Compensation}$ assets to give to open interest holders, where:
-
-$$
+```math
 \text{Total Compensation} < 0.0625 \cdot \text{Open Interest}
-$$
+```
 
 The open interest holders pay total trading costs of $\text{Total Trading Costs}$ (this includes trading fees, slippage, $REP$ price drop, etc). Let's assume $\text{Total Trading Costs}$ flows outside the system (e.g., the participants of this system are not running their own exchanges). The open interest holders result in asset valuation
-
-$$
+```math
 \text{Asset Valuation} = \text{Open Interest} - \text{Total Trading Costs} + \text{Total Compensation} 
-$$
-
+```
 If $\text{TotalCompensation} < \text{Total Trading Costs}$, the Open Interest holders still lose money in the fork.
 
 A happier outcome here is when $\text{Total Compensation} > \text{Total Trading Costs}$, as then traders are paid more than the fees were, and they are compensated for the trouble of the fork. However, this opens an attack surface. If the fork results in open interest holders to gain, an attacker could notice that fork is about to occur and purchase huge amount of open interest and capture most of this compensation for them. The risk of this is difficult to calculate as most likely the bigger the auctioned open interest amount is, the higher the \text{Total Trading Costs}$ become. It is also important that the cost to fork is higher than what open interest holders could profit.
 
 > [!WARNING]
 > TODO: We could analyze on the impact on the market and markets liquidity requirements assuming theres x rep, y eth locked in unisvap v2
+> 
 > TODO: We could also try to try to measure the loss traders are making and minting enough rep to cover it
 
 ## Avoiding Forks - The Escalation Game
@@ -352,6 +332,7 @@ A similar mechanism exists in reality.eth, where a role called the *adjudicator*
 
 > [!WARNING]
 > TODO: The cost of fork should at min be the cost of the pain caused to open interest holders. However, we don't know how much this is, and if we pay too much, it introduces an attack vector.
+>
 > TODO: The cost should be higher than the cost occured to open interest holders, however, its hard to measure the cost introduced to traders
 
 ## Prior Oracles Break "Bet and Forget"
