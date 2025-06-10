@@ -11,20 +11,19 @@ The design can be summarized as follows:
 
 An interesting additional benefit we can get with this design is that we could in theory allow any number of any assets being traded on the system. We just need to be able to convert these claims into $REP$.
 
-:::info
-#### Example: Simple Single Forking Market Scenario:
-
-1. **Bob** has 100 YES shares on the market worth $50
-2. **Alice** has 100 NO Shares on the market worth $50
-3. Open interest (\$100) is sold in open market to get \$100 worth of $REP$. Let's assume $1\;REP = 1$$, meaning we get 100 $REP$ in the sale.
-4. The market forks and the chain is split into YES and NO universes.
-5. On the YES universe, **Bob** can convert their 100 YES shares to 100 $REP_{YES}$. On No Universe, **Bobs** shares are worth 0 $REP_{NO}$.
-6. On the No universe, **Alice** can convert their 100 NO shares to 100 $REP_{NO}$. On Yes Universe, **Alices** shares are worth 0 $REP_{YES}$.
-7. **Bob** believes that the NO universe is correct even thought they lost, so they continue to trade in Universe NO in the future.
-8. **Alice** also believes the NO universe is correct and they continue to trade there. **Alice** sells her $REP_{NO}$ for 100$ and realizes profit of 50$.
-
-It also might happen that the steps 7-8 go differenly in a way that both traders disagree and continue to trade in YES and NO universes separately. This can result in both universes to be valuable and end up being used for future markets.
-:::
+> [!NOTE]
+> #### Example: Simple Single Forking Market Scenario:
+> 
+> 1. **Bob** has 100 YES shares on the market worth $50
+> 2. **Alice** has 100 NO Shares on the market worth $50
+> 3. Open interest (\$100) is sold in open market to get \$100 worth of $REP$. Let's assume $1\;REP = 1$$, meaning we get 100 $REP$ in the sale.
+> 4. The market forks and the chain is split into YES and NO universes.
+> 5. On the YES universe, **Bob** can convert their 100 YES shares to 100 $REP_{YES}$. On No Universe, **Bobs** shares are worth 0 $REP_{NO}$.
+> 6. On the No universe, **Alice** can convert their 100 NO shares to 100 $REP_{NO}$. On Yes Universe, **Alices** shares are worth 0 $REP_{YES}$.
+> 7. **Bob** believes that the NO universe is correct even thought they lost, so they continue to trade in Universe NO in the future.
+> 8. **Alice** also believes the NO universe is correct and they continue to trade there. **Alice** sells her $REP_{NO}$ for 100$ and realizes profit of 50$.
+> 
+> It also might happen that the steps 7-8 go differenly in a way that both traders disagree and continue to trade in YES and NO universes separately. This can result in both universes to be valuable and end up being used for future markets.
 
 ## Assumptions for system to be secure
 There's a couple big assumptions being made on top of the [colored coin assumptions](https://hackmd.io/Z2-lcqDSTSuc-9p_szQUtg):
@@ -42,14 +41,10 @@ Open interest assumption splits into couple of smaller assumptions:
 
 When a fork occurs in Colored Coins, we can simply split the $REP$, resolve the market in each resulting universe, and distribute the new $REP$ accordingly. However, in Partial Colored Coins, this approach doesn't work because external assets cannot be split. Instead, we sell all external assets for $REP$ and then proceed to split the $REP$ in the same manner as with Colored Coins.
 
-
 Assuming the market cap of $REP$ before the fork equals the combined market cap of the truthful universes, users holding shares in the truthful universes can redeem them for their full value.
 
-$$
-\boxed{
-    \text{When Partial Colored Coins forks, it becomes Colored Coins System} 
-}
-$$
+> [!NOTE]
+> When Partial Colored Coins forks, it becomes Colored Coins System
 
 ### How to Sell Assets Effectively
 
@@ -74,11 +69,12 @@ A [Dutch auction](https://en.wikipedia.org/wiki/Dutch_auction) offers a strong s
 
 Dutch auction ensure that the assets are sold at a market-driven price, preserving capital for the open interest holders.
 
-:::warning
-TODO: which is the best auction method to use?
-TODO: how long the auction should last?
-TODO: how much time we need to alert everyone this auction is going to happen?
-:::
+> [!WARNING]
+> TODO: which is the best auction method to use?
+>
+> TODO: how long the auction should last?
+>
+> TODO: how much time we need to alert everyone this auction is going to happen?
 
 ### Claiming assets prior liquidation
 
@@ -140,15 +136,14 @@ Here, `increment` is a tunable parameter that determines how quickly the fee rea
 The actual **Open Interest Fee (%)** then evolves over time as:
 
 $$
-\text{Open Interest Fee%}_{new} = \text{Open Interest Fee%}_{previous} + \text{Fee Change%} \cdot \Delta time
+\text{New Open Interest Fee%} = \text{Previous Open Interest Fee} + \text{Fee Change%} \cdot \Delta time
 $$
 
 Where:
-
 * `Fee Change` is the output from the Bang–bang controller
 * `Δtime` is the time delta since the last adjustment
 
-Alternatively, more sophisticated controllers—such as [**Proportional–Integral–Derivative (PID) controllers**](https://en.wikipedia.org/wiki/Proportional%E2%80%93integral%E2%80%93derivative_controller) - can be used for smoother and more responsive control.
+Alternatively, more sophisticated controllers - such as [**Proportional–Integral–Derivative (PID) controllers**](https://en.wikipedia.org/wiki/Proportional%E2%80%93integral%E2%80%93derivative_controller) - can be used for smoother and more responsive control.
 
 #### Choosing the Target REP Market Cap
 
@@ -164,9 +159,8 @@ $$
 
 * **Partial Colored Coins** may require a significantly higher multiplier, as in fork scenarios, where the REP market cap and liquidity must withstand large, sudden purchases.
 
-:::warning
-TODO: Research on which Open Interest multiplier should be used
-:::
+> [!WARNING]
+> TODO: Research on which Open Interest multiplier should be used
 
 ## How to measure open interest?
 
@@ -180,14 +174,19 @@ It is also possible that the fee adjusting controller does not adjust the fee fa
 Instead of auctioning the assets, we could give all the assets to $REP$ holders and mint equal worth of $REP$ tokens to open interest holders. This requires a reliable price oracle for each asset type held by the system. Big advantage here is that this results in zero trading fees for everyone. However, risk that the $REP$ price is being manipulated increases.
 
 Assuming fork does not have an impact on the market cap of $REP$. We need to mint
+
 $$
 \text{REP Tokens Minted} = \frac{\text{Open Interest}}{\text{REP Token Price}}
 $$
+
 tokens for open interest holders to replace their funds with $REP$, however, this dillutes the token supply and $\text{REP Token Price}$ does not remain constant, the price changes to
+
 $$
 \text{REP Token Price} = \frac{\text{REP Market Cap}}{\text{REP Token Supply}+\text{REP Tokens Minted}}
 $$
+
 Combining these equations result in number of tokens we need to mint for the assets:
+
 $$
 \boxed{
     \text{REP Tokens Minted} = \frac{\text{Open Interest} \cdot \text{REP Token Supply}}{\text{REP Market Cap} - \text{Open Interest}}
@@ -198,23 +197,31 @@ It can be seen from the equation that $\text{Open Interest}$ needs to be smaller
 
 #### Multiasset support
 In the multiple asset case scenario, the open interest need to be known separately for each asset:
-$$\text{Open Interest}_{asset} \in \{\; \text{Open Interest}_{ETH},\;\text{Open Interest}_{Food}, ... \;\}
+
 $$
+\text{Open Interest}_{asset} \in \{\; \text{Open Interest}_{ETH},\;\text{Open Interest}_{Food}, ... \;\}
+$$
+
 We can then get the minting amount needed:
+
 $$
 \text{REP Tokens Minted}_{asset} = \frac{\text{Open Interest}_{asset}}{\text{REP Token Price}_{asset}}
 $$
 
 where $\text{REP Token Price}_{asset}$ is $REP$'s token price in asset, however again $\text{REP Token Price}_{asset}$ is a function of $REP$ we mint, not just the amount we need to mint for $asset$ open interest holders:
+
 $$
 \text{REP Tokens Minted} = \sum_{a \in \text{all assets}}{\text{REP Tokens Minted}_a}
 $$
+
 We can then get $REP$'s token price in the same unit as the market cap is calculated, e.g., dollars($):
+
 $$
 \text{REP Token Price}_$ = \frac{\text{REP Market Cap}_$}{\text{REP Token Supply}+\sum_{ a \in \text{all assets} }{\text{REP Tokens Minted}_{a}}}
 $$
 
 We then need to have a price oracle for each $asset$ in dollars:
+
 $$
 \text{REP Token Price}_{asset} = \frac{\text{REP Token Price}_$}{\text{Asset Token Price}_$}
 $$  
@@ -238,6 +245,7 @@ We also need to assume that minting $REP$ and giving the external assets to $REP
 #### Attacking the multiasset system
 
 There's an easy attack you can do to against this system. The system requires that we have a reliable price oracle for each collateral. If we allow users to trade with any asset out there, we cannot guarrantee the asset will have a reliable oracle. Given we have an asset $attack$, and we are able to control its price, we can mint infinite $REP$:
+
 $$
 \text{REP Tokens Minted}_{asset} =\lim_{\text{REP Token Price}_{attack} \to 0} \frac{\text{Open Interest}_{attack}}{\text{REP Token Price}_{attack}} = \infty
 $$
@@ -256,9 +264,8 @@ Cons:
      - $REP$ holders prefer as little as possible $REP$ to be minted
      - Open interest holders prefer as much as possible $REP$ to be minted
 
-:::warning
-TODO: research if we can somehow guarrantee that manipulating price oracle is harder than the assets we use for it
-:::
+> [!WARNING]
+> TODO: research if we can somehow guarrantee that manipulating price oracle is harder than the assets we use for it
 
 ## Cost of fork
 The cost to trigger a fork should be high enough to cover the potential cost of liquidating all open interest, helping to keep the system solvent during a fork. To prevent abuse, triggering a fork should also require burning some assets - ensuring it’s never free and discouraging spam or griefing. If the system only burns REP as a defense, an attacker who controls 100% of both REP and OI could still fork at no real cost, defeating the purpose of the safeguard. Forks affect all users and are irreversible, similar to Ethereum’s state growth problem, so their cost should reflect the broad impact. This means the cost should scale with the number of users involved, not just the total value at stake. Ultimately, the cost to traders should increase with the amount of open interest in the system to align incentives and maintain security.
@@ -272,22 +279,24 @@ The $REP$ gained from the open interest auction is very likely worth less than t
 What is the upper limit bonus we can give to traders that won't break incentives? As the forks are disruptive, there could be some kind of escalation game that results in fork to trigger, similarly to Augur v2. In Augur v2 At least $1.25\%$ of $REP$ needs to be destined for $REP_{lie}$ for a fork to happen, and if the $REP$ targeting mechanism is working properly then this means $1.25\%$ of $5 \cdot \text{Open Interest}$, we need to make sure we don't mint more value than $6.25\%$ of open interest. However, this assumes there are no other incentives for attacking the system.
 
 If we assume then we have at most $\text{Total Compensation}$ assets to give to open interest holders, where:
+
 $$
 \text{Total Compensation} < 0.0625 \cdot \text{Open Interest}
 $$
+
 The open interest holders pay total trading costs of $\text{Total Trading Costs}$ (this includes trading fees, slippage, $REP$ price drop, etc). Let's assume $\text{Total Trading Costs}$ flows outside the system (e.g., the participants of this system are not running their own exchanges). The open interest holders result in asset valuation
+
 $$
 \text{Asset Valuation} = \text{Open Interest} - \text{Total Trading Costs} + \text{Total Compensation} 
 $$
+
 If $\text{TotalCompensation} < \text{Total Trading Costs}$, the Open Interest holders still lose money in the fork.
 
 A happier outcome here is when $\text{Total Compensation} > \text{Total Trading Costs}$, as then traders are paid more than the fees were, and they are compensated for the trouble of the fork. However, this opens an attack surface. If the fork results in open interest holders to gain, an attacker could notice that fork is about to occur and purchase huge amount of open interest and capture most of this compensation for them. The risk of this is difficult to calculate as most likely the bigger the auctioned open interest amount is, the higher the \text{Total Trading Costs}$ become. It is also important that the cost to fork is higher than what open interest holders could profit.
 
-:::warning
-TODO: We could analyze on the impact on the market and markets liquidity requirements assuming theres x rep, y eth locked in unisvap v2
-TODO: We could also try to try to measure the loss traders are making and minting enough rep to cover it
-
-:::
+> [!WARNING]
+> TODO: We could analyze on the impact on the market and markets liquidity requirements assuming theres x rep, y eth locked in unisvap v2
+> TODO: We could also try to try to measure the loss traders are making and minting enough rep to cover it
 
 ## Avoiding Forks - The Escalation Game
 
@@ -341,10 +350,9 @@ A similar mechanism exists in reality.eth, where a role called the *adjudicator*
 2) How much to award to open interest holder (v2 has 0%)
 3) How much award to people who played escalation game (v2 has 40%)
 
-:::warning
-TODO: The cost of fork should at min be the cost of the pain caused to open interest holders. However, we don't know how much this is, and if we pay too much, it introduces an attack vector.
-TODO: The cost should be higher than the cost occured to open interest holders, however, its hard to measure the cost introduced to traders
-:::
+> [!WARNING]
+> TODO: The cost of fork should at min be the cost of the pain caused to open interest holders. However, we don't know how much this is, and if we pay too much, it introduces an attack vector.
+> TODO: The cost should be higher than the cost occured to open interest holders, however, its hard to measure the cost introduced to traders
 
 ## Prior Oracles Break "Bet and Forget"
 Without prior oracles such as escalation games or designated reporter, you can make a bet, and forget about the bet until you want to bet again or withdraw. Prior oracles break this, as they require you to pay attention to the prior oracle resolutions and be ready to dispute their resolutions. 
