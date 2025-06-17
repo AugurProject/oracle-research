@@ -8,13 +8,13 @@
 5) $REP_{false}$ universe does the same for false-share owners
 
 ## Assumptions
-- $\text{REP MCAP} > \text{current open interest}$ (otherwise there's incentive to trigger fork to steal open interest)
-- $REP_{true}\;\text{future value} >= \text{current open interest}$ (we need future rep holders to buy out the open interest holders
+- $\text{REP Market Cap} > \text{current open interest}$ (otherwise there's incentive to trigger fork to steal open interest)
+- $REP_{true} \text{future value} >= \text{current open interest}$ (we need future rep holders to buy out the open interest holders
 
 ## Two tiered auction:
 1) First Auction Participation Tokens holders can move their open interest share over + add bonus in ETH.
 2) If all the open interest is covered the auction ends, all the participants are paid minted $REP_{true}$ according their total payment (everyone gets the same price)
-3) Free for all dutch auction begins. Participants should be incentivized to buy rep when $REP\;mcap < future\; value$
+3) Free for all dutch auction begins. Participants should be incentivized to buy rep when $\text{REP Market Cap} < \text{future value}$
 
 ## Ideal situation
 - Augur forks and $REP$ holders move the open interest into right universe. If some $REP$ holders do not participate (eg, the lying $REP$), rest of the open interest is covered with more open auction by dilluting $REP_{true}$ holders.
