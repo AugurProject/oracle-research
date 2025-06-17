@@ -1,7 +1,7 @@
 # Partial Colored Coins: Colored Coins with external assets
 ![image](https://hackmd.io/_uploads/HJvCSN3zxx.png)
 
-The **Partial Colored Coins** is a variant of the [Colored Coins Prediction Market](https://hackmd.io/Z2-lcqDSTSuc-9p_szQUtg) that introduces the ability for users to predict using external assets such as Ether, Bitcoin, or USDC. This concept was originally proposed in [Parasitic Immune Augur](https://listed.to/authors/33689/posts/51513).
+The **Partial Colored Coins** is a variant of the [Colored Coins Prediction Market](https://github.com/DarkFlorist/oracle-research/blob/main/Colored%20Coins.md) that introduces the ability for users to predict using external assets such as Ether, Bitcoin, or USDC. This concept was originally proposed in [Parasitic Immune Augur](https://listed.to/authors/33689/posts/51513).
 
 The design can be summarized as follows:
 > Users lock external assets (e.g., Ether) into trade agreements that rely on oracle resolution. Whenever the system reaches a decision point:
@@ -26,7 +26,7 @@ An interesting additional benefit we can get with this design is that we could i
 > It also might happen that the steps 7-8 go differenly in a way that both traders disagree and continue to trade in YES and NO universes separately. This can result in both universes to be valuable and end up being used for future markets.
 
 ## Assumptions for system to be secure
-There's a couple big assumptions being made on top of the [colored coin assumptions](https://hackmd.io/Z2-lcqDSTSuc-9p_szQUtg):
+There's a couple big assumptions being made on top of the [colored coin assumptions](https://github.com/DarkFlorist/oracle-research/blob/main/Colored%20Coins.md):
 
 1. **Open interest can be sold to the same worth of REP**: When open interest gets sold on the open market, we get equivalent worth of $REP$ tokens from the market.
 2. **Asset swap assumption**: People are okay having their open interest of some external assets being converted into $REP$.
