@@ -1,5 +1,5 @@
 # Colored Coins Prediction Market and its security assumptions
-![image](https://hackmd.io/_uploads/Bk1lEEhfgx.png)
+![image](images/colored_coins.png)
 
 The *Colored Coins* system refers to a distinct oracle mechanism, with the earliest mention I found appearing in a brief reference by [zack-bitcoin](https://github.com/zack-bitcoin) in the [Amoveo documentation](https://github.com/zack-bitcoin/amoveo-docs/blob/master/design/oracle_simple.md). This design is entirely separate from the concept of [Colored Coins on Bitcoin](https://en.bitcoin.it/wiki/Colored_Coins), which involves tagging bitcoins to represent alternative assets on the Bitcoin blockchain.
 

@@ -1,5 +1,5 @@
 # Partial Colored Coins: Colored Coins with external assets
-![image](https://hackmd.io/_uploads/HJvCSN3zxx.png)
+![image](images/partial_colored_coins.png)
 
 The **Partial Colored Coins** is a variant of the [Colored Coins Prediction Market](https://github.com/DarkFlorist/oracle-research/blob/main/Colored%20Coins.md) that introduces the ability for users to predict using external assets such as Ether, Bitcoin, or USDC. This concept was originally proposed in [Parasitic Immune Augur](https://listed.to/authors/33689/posts/51513).
 

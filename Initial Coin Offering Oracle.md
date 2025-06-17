@@ -1,5 +1,5 @@
 
-![image](https://hackmd.io/_uploads/Hk27KXumel.png)
+![image](images/ico_oracle.png)
 
 # Initial Coin Offering Oracle
 

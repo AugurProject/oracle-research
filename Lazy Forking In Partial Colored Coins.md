@@ -39,7 +39,7 @@ Lazy forking allows us to fork only a specific market and liquidate its open int
 > 
 > So if you're holding shares in outcome $B1$, your open interest will be split across $REP_{A1 B1}$ and $REP_{A2 B1}$.
 > 
-> ![image](https://hackmd.io/_uploads/Hkf9kzN7xe.png)
+> ![image](images/lazy_forking.png)
 > 
 
 ## Escalation Game in Lazy Forking
