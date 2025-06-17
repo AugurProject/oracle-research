@@ -159,13 +159,13 @@ To sum it up, in order for the Colored Coins system to be secure, we need to ass
 
 1. **Users are greedy**: Users value more money over less money.
 2. **A fork doesn't change the total value of the system**. Market cap of a previous universe equals to market cap of the formed universes: 
-$$
-value\;of\;assets\;prior\;fork = \sum_{future\;universes}{value\;of\;assets_{universe}}
-$$
+```math
+\text{value of assets prior fork }= \sum_{\text{future universes}}{\text{value of assets}_{universe}}
+```
 3. **Users value honest universe(s)**: User prefers to use an universe that is honest in their opinion:
-$$
-value\;of\;assets\;prior\;fork =value\;of\;assets_{truthful\;universe}
-$$
+```math
+\text{value of assets prior fork } = \text{value of assets}_{\text{truthful universe}}
+```
 4. **Neglible operation costs**: Transaction fees (eg, gas fee) are neglible compared to financial value of the transactions.
 5. **Access to information**: Users should have reliable and timely access to information in order to determine the most truthful outcome of a market.
 6. **Colored Coins are not too volatile**: If the coins are too volatile, it makes no sense to bet with them.
