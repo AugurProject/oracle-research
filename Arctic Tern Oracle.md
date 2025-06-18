@@ -24,13 +24,13 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 >
 > * He receives 5 $REP_A$
 > * He transfers a proportional share of open interest:
->   $\frac{\text{5 ETH}}{\text{100 ETH}} \cdot 10$ $ETH$ $=$ 0.5 $ETH$
+>   $\frac{5\ REP}{100\ REP} \cdot 10\ ETH = 0.5\ ETH$
 >   So, 0.5 $ETH$ of open interest moves to universe A.
 >
 > The remaining $REP$ holders (95 $REP$) believe universe B is correct and migrate there, transferring:
 >
 > * 95 $REP_B$
-> * $\frac{\text{95 ETH}}{\text{100 ETH }} \cdot 10$ $ETH$ $=$ 9.5 $ETH$ of open interest
+> * $\frac{95\ ETH}{100\ ETH} \cdot 10\ ETH = 9.5\ ETH$ of open interest
 >
 > In the end:
 >
@@ -39,14 +39,14 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 
 ## Making Open Interest Holders Whole
 
-The open interest migration process helps restore value to open interest holders in their respective universes. However, if not all $REP$ holders migrate to the same universe, open interest holders still lose value.
+The open interest migration process helps restore value to open interest holders in their respective universes. However, if not all $REP$ holders migrate to the same universe, open interest holders still lose value if one of the universes is an attacker.
 
-A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\%$ of all $REP$, and we assume that universe A maintains the original universe’s Fully Diluted Valuation (FDV), then:
+A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\\%$ of all $REP$, and we assume that universe A's future fee yield matches future fee yield of Augur prior to the fork, then:
 
-* **$REP_A$ holders** effectively gain $60$ percentage points in value
-* **open interest holders** in universe A lose $100\% - 40\% = 60\%$ of the original open interest
+* **$REP_A$ holders** went from having rights to $40\\%$ of future fee yield to having rights to $100\\%$ of future fee yield, a $150\\%$ increase.
+* **open interest holders** end up with $40\\%$ of their open interest resolving in universe A and $60\\%$ resolving in universe B.  If universe B is malicious and resolves incorrectly, then honest participants will effectively lose $60\\%$ of their open interest.
 
-To balance this out, we can mint $60\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\%$ of open interest. The open interest holders in universe A would end up with:
+To balance this out, we can mint $60\\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\\%$ of open interest. The open interest holders in universe A would end up with:
 
 ```math
 \text{New Open Interest} = \text{Original Open Interest} \cdot 40\% + \text{REP A Market Cap} \cdot 60\%
