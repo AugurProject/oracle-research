@@ -41,7 +41,7 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 
 The open interest migration process helps restore value to open interest holders in their respective universes. However, if not all $REP$ holders migrate to the same universe, open interest holders still lose value.
 
-A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\%$ of all $REP$, and we assume that universe A maintains the original universe’s Fully Diluted Valuation (FDV), then:
+A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\%$ of all $REP$, and we assume that universe A maintains the original universe’s Discounted Cash Flow (DCF) , then:
 
 * **$REP_A$ holders** effectively gain $60$ percentage points in value
 * **open interest holders** in universe A lose $100\% - 40\% = 60\%$ of the original open interest
