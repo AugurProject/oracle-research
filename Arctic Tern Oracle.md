@@ -1,4 +1,4 @@
-# The Artic Tern Oracle
+# The Arctic Tern Oracle
 
 ![image](images/arctic_tern.png)
 
