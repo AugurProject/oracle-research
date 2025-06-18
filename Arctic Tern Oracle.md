@@ -41,7 +41,7 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 
 The open interest migration process helps restore value to open interest holders in their respective universes. However, if not all $REP$ holders migrate to the same universe, open interest holders still lose value if one of the universes is an attacker.
 
-A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\\%$ of all $REP$, and we assume that universe A's future fee yield matches future fee yield of Augur prior to the fork, then:
+A fork splits the original $REP$ into multiple universes, each receiving a fraction of the total $REP$. For example, if universe A receives $40\\%$ of all $REP$, and we assume that universe A maintains the original universe’s Discounted Cash Flow (DCF) , then:
 
 * **$REP_A$ holders** went from having rights to $40\\%$ of future fee yield to having rights to $100\\%$ of future fee yield, a $150\\%$ increase.
 * **open interest holders** end up with $40\\%$ of their open interest resolving in universe A and $60\\%$ resolving in universe B.  If universe B is malicious and resolves incorrectly, then honest participants will effectively lose $60\\%$ of their open interest.
