@@ -22,13 +22,13 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 >
 > * He receives 5 $REP_A$
 > * He transfers a proportional share of open interest:
->   $\frac{5\;ETH}{100\;ETH} \cdot 10$ $ETH$ $=$ 0.5 $ETH$
+>   $\frac{\text{5 ETH}}{\text{100 ETH}} \cdot 10$ $ETH$ $=$ 0.5 $ETH$
 >   So, 0.5 $ETH$ of open interest moves to universe A.
 >
 > The remaining $REP$ holders (95 $REP$) believe universe B is correct and migrate there, transferring:
 >
 > * 95 $REP_B$
-> * $\frac{95\;ETH}{100\;ETH} \cdot 10$ $ETH$ $=$ 9.5 $ETH$ of open interest
+> * $\frac{\text{95 ETH}}{\text{100 ETH }} \cdot 10$ $ETH$ $=$ 9.5 $ETH$ of open interest
 >
 > In the end:
 >
