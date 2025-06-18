@@ -9,3 +9,5 @@ Research notes for oracle design
 
 [Initial Coin Offering Oracle](/Initial%20Coin%20Offering%20Oracle.md)
 
+[Artic Tern Oracle](/Artic%20Tern%20Oracle.md)
+
