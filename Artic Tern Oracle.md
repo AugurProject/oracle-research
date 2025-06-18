@@ -35,7 +35,7 @@ For this mechanism to remain secure, the value of the **$REP$ being migrated mus
 > * Universe A holds 5 $REP_A$ and 0.5 $ETH$ of open interest
 > * Universe B holds 95 $REP_B$ and 9.5 $ETH$ of open interest
 
-### Making Open Interest Holders Whole
+## Making Open Interest Holders Whole
 
 The open interest migration process helps restore value to open interest holders in their respective universes. However, if not all $REP$ holders migrate to the same universe, open interest holders still lose value.
 
@@ -77,7 +77,7 @@ An Opportunist will find it profitable to mint new Open Interest up to the limit
 \text{Total Open Interest} = \text{REP Market Cap}
 ```
 As long as this condition holds, the attack is economically viable.
-#### Mitigation: Introducing Auctions with Capped Minting
+### Mitigation: Introducing Auctions with Capped Minting
 
 To prevent value capture attacks, we introduce **$REP_{truth}$ → $ETH$ auctions** as a mitigation mechanism.
 
@@ -87,7 +87,7 @@ This can be achieved via auctions. In each universe, we auction off the $REP$ **
 
 If the auction fails to raise sufficient funds to cover the missing open interest - for example, due to low demand or temporary volatility - we fall back to directly distributing the remaining $REP$ to open interest holders.
 
-#### All the options
+### All the options
 
 There's a few ways to attempt to make open interest whole after migration:
 1) **Give REP**: Give open interest holders the non-migrated $REP$ (vulnerable to opportunistic attack)
