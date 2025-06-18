@@ -4,7 +4,7 @@
 
 The Arctic tern is a bird species that holds the long-distance migration record for birds, travelling between Arctic breeding grounds and the Antarctic each year.
 
-The Arctic Tern Oracle is a [Partial Colored Coin Oracle](/Partial%20Colored%20Coins.md) designed to shift the volatility risk of $REP$ after a fork from Open Interest holders to $REP$ holders.
+The Arctic Tern Oracle is a [Partial Colored Coin Oracle](/Partial%20Colored%20Coins.md) designed to shift the volatility risk of $REP$ after a fork from open interest holders to $REP$ holders.
 
 ## Open Interest and REP Migration
 
