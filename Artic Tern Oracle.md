@@ -59,8 +59,8 @@ This amount is greater than their initial open interest value.
 
 The net gain for Open Interest holders depends on two factors:
 
-* How much $REP$ failed to migrate to universe A
-* The ratio of the $REP$ market cap to the original open interest
+* How much $REP$ failed to migrate to universe A (bigger the better)
+* The ratio of the $REP$ market cap to the original open interest (bigger the better)
 
 ### Open Interest Value Capture Attack
 
@@ -102,8 +102,6 @@ To ensure the system remains secure, it is absolutely critical that:
 \text{Open Interest} < \text{REP Market Cap}
 ```
 
-### Controlling Open Interest Growth
-
 One way to maintain this condition is by regulating the cost of maintaining open interest - similar to the dynamic fee model used in Augur V2. However, Augur V2 relies on a controller to adjust fees, which reacts slowly to sudden spikes in open interest.
 
 A more robust alternative is to **enforce a hard cap on insurable open interest**. Augur V2 cannot practically implement this, as it's more important for it to register open interest - even if excessive - than to risk unregistered parasitic interest. However, in a **Partial Colored Coin-based system** like Arctic Tern, only registered open interest is insured. This allows us to set strict limits on how much open interest we are willing to support.
@@ -124,7 +122,7 @@ To compute REP Market Cap, we use a price oracle that provides the $ETH$ value o
 
 ### REP/ETH Price Oracle
 
-Maintaining the critical condition $\text{Open Interest} < \text{REP Market Cap}$ requires a price feed. The `Security Multiplier` must be set high enough to account for expected inaccuracies or delays in the oracle's price data. This buffer ensures that even with small oracle errors, the system stays within safe bounds.
+Maintaining the critical condition $\text{Open Interest} < \text{REP Market Cap}$ requires a price feed. The Security Multiplier must be set high enough to account for expected inaccuracies or delays in the oracle's price data. This buffer ensures that even with small oracle errors, the system stays within safe bounds.
 
 ### Open Interest Burning
 
@@ -135,7 +133,7 @@ This method effectively sacrifices a fraction of open interest to preserve the i
 > [!WARNING]
 > TODO Could we use the extra open interest smarter, eg buy REP?
 
-### To sum measures to maintain: Open Interest < REP Market Cap:
+### Summary of the options:
 1) Creating open interest has a cost (onetime / time based)
-2) Introduce hard open interest cap
-3) Burn open interest in order to stay under the limit
+2) Introduce hard open interest creation cap
+3) Burn exess open interest in order to stay under the limit
