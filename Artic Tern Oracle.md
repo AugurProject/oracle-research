@@ -44,7 +44,7 @@ A fork splits the original $REP$ into multiple universes, each receiving a fract
 * **$REP_A$ holders** effectively gain $60$ percentage points in value
 * **open interest holders** in universe A lose $100\% - 40\% = 60\%$ of the original open interest
 
-To balance this out, we can mint $60\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\%$ of Open Interest. The open interest holders in universe A would end up with:
+To balance this out, we can mint $60\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\%$ of open interest. The open interest holders in universe A would end up with:
 
 ```math
 \text{New Open Interest} = \text{Original Open Interest} \cdot 40\% + \text{REP A Market Cap} \cdot 60\%
@@ -57,7 +57,7 @@ Assuming:
 
 This amount is greater than their initial open interest value.
 
-The net gain for Open Interest holders depends on two factors:
+The net gain for open interest holders depends on two factors:
 
 * How much $REP$ failed to migrate to universe A (bigger the better)
 * The ratio of the $REP$ market cap to the original open interest (bigger the better)
@@ -70,9 +70,9 @@ Suppose $10\%$ of the total $REP$ and corresponding open interest migrates to a 
 
 An opportunistic actor could exploit this by generating as much open interest as possible just before the fork, aiming to claim a disproportionate share of the newly minted $REP_{truth}$. Since $90\%$ of the open interest remains in $REP_{truth}$, the attacker recovers most of their open interest ($90\%$) while also gaining bonus $REP_{truth}$ at cost of $10\%$ in open interest.
 
-In the worst-case scenario, nearly all of the open interest (except for a small $\epsilon$) is controlled by the Opportunist. They then receive nearly $100\%$ of the bonus $REP_{truth}$, while the small fraction of honest Open Interest holders (holding $\epsilon$) receives just enough $REP_{truth}$ to break even. However, if $REP_{truth}$ is volatile, even honest traders may face losses despite this compensation.
+In the worst-case scenario, nearly all of the open interest (except for a small $\epsilon$) is controlled by the Opportunist. They then receive nearly $100\%$ of the bonus $REP_{truth}$, while the small fraction of honest open interest holders (holding $\epsilon$) receives just enough $REP_{truth}$ to break even. However, if $REP_{truth}$ is volatile, even honest traders may face losses despite this compensation.
 
-An Opportunist will find it profitable to mint new Open Interest up to the limit where:
+An Opportunist will find it profitable to mint new open interest up to the limit where:
 ```math
 \text{Total Open Interest} = \text{REP Market Cap}
 ```
