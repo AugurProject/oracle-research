@@ -101,7 +101,7 @@ There's a few ways to attempt to make open interest whole after migration:
 To ensure the system remains secure, it is absolutely critical that:
 
 ```math
-\text{Open Interest} < \text{REP Market Cap}
+\text{REP Market Cap} > \text{Open Interest}
 ```
 
 One way to maintain this condition is by regulating the cost of maintaining open interest - similar to the dynamic fee model used in Augur V2. However, Augur V2 relies on a controller to adjust fees, which reacts slowly to sudden spikes in open interest.
