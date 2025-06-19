@@ -1,7 +1,7 @@
 # Glossary
 
 ## CASH
-Anytime someone puts ETH into the system to buy a complete set, they will deposit into a contract and receive CASH tokens in exchange.  Everything in the system uses CASH tokens or REP, no other tokens are accepted or used in the protocol.  The exchange rate of CASH:ETH starts at 1 and increases over time, with the rate of increase going up if the system finds that it needs REP to have more value, and down if REP can have less value.  The excess ETH in the contract is eventually distributed to REP holders, and is the core mechanism that gives REP value, because holders of REP have a right to those accrued fees.
+Anytime someone puts ETH into the system to buy a complete set, they will deposit into a contract and receive CASH tokens in exchange.  Everything in the system uses CASH tokens or REP, no other tokens are accepted or used in the protocol.  The exchange rate of CASH:ETH starts at 1 and increases over time, with the rate of increase going up if the system finds that it needs REP to have more value, and down if REP can have less value.  The excess ETH in the contract is eventually distributed to REP holders, and is the core mechanism that gives REP value, because holders of REP have a right to those accrued fees.  The amount of ETH in the CASH contract is strictly constrained to be some multiple less than the current REP DCF at any given time.  If it is equal to or higher than this multiple (e.g., 2x) then no new CASH can be issued.  When markets finalize, any CASH associated with them is converted to ETH at that moment in time.
 
 
 # Outline
@@ -22,7 +22,7 @@ The main requirement is that any REP committed in the escalation game is committ
 * **Broad Participation** - Maximize inclusion by making participation widely accessible
 </details>
 
-## Market Migratio
+## Market Migration
 All markets will migrate to all possible universes once the escalation game reaches a stalemate.  The forking market will be finalized on each universe, but all other markets will return to pre-reporting state (possibly entering reporting immediately upon migration completion).
 
 ## REP Migration
@@ -58,6 +58,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * REP DCF Before Fork: $200 ($1/REP)
 * CASH value: $1
 * ETH value: $1
+* Auction Efficiency: 75%
+* DCF Change in True Universe: 100% (no change)
+* DCF Change in False Universe: 0% (wiped out)
+
 
 <details>
 <summary>
@@ -66,26 +70,24 @@ Unless otherwise specified, all scenarios below have the following baseline:
 
 </summary>
 
-* DCF Change in True Universe: 100% (no change)
-* DCF CHange in False Universe: 0% (wiped out)
 ### REP Migration
-* 10 REP -> False
 * 190 REP -> True
+* 10 REP -> False
 ### CASH Migration
-* 2.5 CASH -> False
 * 47.5 CASH -> True
+* 2.5 CASH -> False
 ### Auction
-* False auction raises only 0.5 ETH, and mints 100,000 REP-F.
-* True auction raises 2.5 ETH, and mints 5 REP-T.
+* True auction raises 2.5 ETH, and mints 3.5 REP-T (rounded for simplicity).
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
 ### Outcome
-* True universe has 50 ETH in CASH available for distribution to winners, no loss for OI holders.
-* True universe has 195 REP worth $200 total ($1.0256/REP), REP-True holders gained $0.0256/REP.
-* False universe has 3 ETH in CASH available for distribution to attacker.
-* False universe has 100,010 REP worth $0 total ($0/REP), REP-False holders lost $10.
-* Attacker lost $7 net.
-* Defenders gained $5 net.
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 193.5 REP worth $200 total, REP-True holders gain $6.5 ($0.0336/REP).
+* False universe has 2.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,010 REP worth $0 total.
+* Attacker lost $7.5 net.
+* Defenders gained $6.5 net.
 * Traders lost nothing.
-* Auction participants gained $2 (from auction inefficiency).
+* Auction participants profited $1.
 
 </details>
 
@@ -96,15 +98,63 @@ Unless otherwise specified, all scenarios below have the following baseline:
 
 </summary>
 	
-* DCF Change in True Universe: 100% (no change)
-* DCF Change in False Universe: 0% (wiped out)
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises 47.5 ETH, and mints 65 REP (rounded for simplicity).
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
+## Outcome
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 75 REP worth $200 total, REP-True holders gain $125 ($1.667/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $142.5 net.
+* Defenders gained $125 net.
+* Traders lost nothing.
+* Auction participants profited $17.5.
 
 </details>
 
 <details>
 <summary>
 
-## Sleepy REP
+## Sleepy REP: Strong Attack, Many Asleep, True Auction Success
+
+</summary>
+
+## REP Migration
+* 5 REP -> True
+* 15 REP -> False
+* 180 REP didn't move
+## CASH Migration
+* 1.25 CASH -> True
+* 3.75 CASH -> False
+* 45 CASH remains in parent universe.
+## Auction
+* True auction raises 48.75 ETH, and mints 65 REP.
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
+## Outcome
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 70 REP worth $200 total, REP-True holders gain $130 ($1.857/REP).
+* False universe has 3.75 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* 45 CASH distributed to 180 sleeping REP holders.
+* Attacker lost $11.25 net.
+* Defenders gained $130 net.
+* Sleeping REP holders lost $135 net.
+* Traders lost nothing.
+* Auction participants profited $16.25.
+
+</details>
+
+<details>
+<summary>
+
+## DCF Harmed: TODO
 
 </summary>
 
@@ -115,7 +165,7 @@ TODO
 <details>
 <summary>
 
-## DCF Harmed
+## Contentious Market: TODO
 
 </summary>
 
@@ -126,7 +176,7 @@ TODO
 <details>
 <summary>
 
-## Contentious Market
+## All Auctions Fail: TODO
 
 </summary>
 
