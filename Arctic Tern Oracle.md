@@ -49,7 +49,7 @@ A fork splits the original $REP$ into multiple universes, each receiving a fract
 To balance this out, we can mint $60\\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\\%$ of open interest. The open interest holders in universe A would end up with:
 
 ```math
-\text{New Open Interest} = \text{Original Open Interest} \cdot 40\\% + \text{REP A Market Cap} \cdot 60\\%
+\text{New Open Interest} = \text{Original Open Interest} \cdot 40\% + \text{REP A Market Cap} \cdot 60\%
 ```
 
 Assuming:
@@ -162,13 +162,13 @@ If the system has been able to maintain a healthy fraction, it should hold that:
 
 As its important that migrating $REP$, at most migrates open interest that is worth the same. We can calculate: 
 ```math
-\text{Open Interest} \leq \text{Migrating Rep\\%}*\text{REP Market Cap}
+\text{Open Interest} \leq \text{Migrating Rep\%}*\text{REP Market Cap}
 ```
 
 Here, $\text{Migrating Rep\\%} = 100\\%-\text{Sleeping REP\\%}$, we can also assign $\text{Realized Security Multiplier}$ to get:
 
 ```math
-\text{Max Sleeping REP \\%} = max(100\\% - \frac{100\\%}{\text{Realized Security Multiplier}}, 0\\%)
+\text{Max Sleeping REP \%} = max(100\% - \frac{100\%}{\text{Realized Security Multiplier}}, 0\%)
 ```
 
 This directly lowers the benefits we get from Security Multiplier, the more sleeping $REP$ we allow to migrate (capped by how much of if exists), the easier its to attack the system. We might adjust the max amount down by replacing $\text{Realized Security Multiplier}$ in the equation with a smaller value, or by directly subtracting percentages from the end result.
