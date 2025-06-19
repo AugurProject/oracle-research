@@ -7,7 +7,7 @@ Everything in the system uses CASH or REP, no other assets are accepted or used 
 
 The exchange rate of CASH per ETH starts at 1 and increases over time.  The rate of increase goes up if the system finds that it needs REP to have more value, and it goes down if REP can have less value.  The excess ETH in the contract from this inflation is distributed to REP holders, and is the core mechanism that gives REP value.
 
-The amount of ETH in the CASH contract is strictly constrained to be some multiple less than the current REP DCF at any given time.  If it is equal to or higher than this multiple (e.g., 2x) then no new CASH can be issued.  The inflationary pressure on CASH will attempt to increase REP DCF somewhat, but the hard cap reduces the risk that the system goes underwater (ETH > REP DCF).
+The amount of ETH in the CASH contract is strictly constrained to be some multiple less than the current REP Discounted Cash Flow (DCF) at any given time.  If it is equal to or higher than this multiple (e.g., 2x) then no new CASH can be issued.  The inflationary pressure on CASH will attempt to increase REP DCF somewhat, but the hard cap reduces the risk that the system goes underwater (ETH > REP DCF).
 
 
 # $${\color{ForestGreen}{\textsf{Outline}}}$$
@@ -15,7 +15,7 @@ The amount of ETH in the CASH contract is strictly constrained to be some multip
 ## $${\color{ProcessBlue}{\textsf{Escalation Game}}}$$
 If the initial report for a market is disputed, an escalation game ensues.  The escalation game is played with REP.  The escalation game works the same as Augur v2.
 <details>
-<summary>$${\color{yellow}{\textsf{Other escalation games can work here.}}}$$</summary>
+<summary>$${\color{BurntOrange}{\textsf{Other escalation games can work here.}}}$$</summary>
 The main requirement is that any REP committed in the escalation game is committed to the chosen side in a fork should the escalation game reach a stalemate state.  Other things that make for a good escalation game:
 
 * **Long-Term Coordination** - Enable sustained collaboration among participants over time of the dispute
@@ -32,7 +32,7 @@ The main requirement is that any REP committed in the escalation game is committ
 All markets will migrate to all possible universes once the escalation game reaches a stalemate.  The forking market will be finalized on each universe, but all other markets will return to pre-reporting state (possibly entering reporting immediately upon migration completion).
 
 ## $${\color{ProcessBlue}{\textsf{REP Migration}}}$$
-Once the escalation game has reached its stalemate state, all REP holders will have a time-boxed window to migrate their REP.  Any REP that participated in the escalation game automatically migrates to the universe it was staked on.  All other REP can choose any universe.
+Once the escalation game has reached its stalemate state, all REP holders will have a time limited opportunity to migrate their REP to one of the child universes.  Any REP that participated in the escalation game automatically migrates to the universe it was staked on.  All other REP can choose any child universe.
 
 ## $${\color{ProcessBlue}{\textsf{CASH Migration}}}$$
 After the REP migration period ends, the system will look at how the REP is distributed across universes and migrate all CASH proportionately to the REP migration.  If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the CASH would migrate to universe A, 50% of CASH would migrate to universe B, and 30% of CASH would remain behind.
@@ -40,12 +40,12 @@ After the REP migration period ends, the system will look at how the REP is dist
 The CASH that remains behind is distributed to REP holders who failed to migrate.  The REP becomes worthless at this point and serves no purpose other than to redeem for CASH.  Transfers remain enabled so people can withdraw REP from exchanges and other contracts in order to redeem for CASH, but it no longer serves any purpose within the system.
 
 ## $${\color{ProcessBlue}{\textsf{CASH for REP Auction}}}$$
-On each universe, a dutch auction is held where people are bidding ETH in exchange for REP.  The auction ends when it either has (A) raised enough ETH to restore the CASH contract on the universe to the pre-fork CASH levels or (B) has reached a point where the amount of REP being sold fully dillutes existing REP holders (minus epsilon).  The REP auction participants receive will be minted and distributed when the auction finalizes.  The ETH proceeds of the auction will be added to the CASH contract on the auction's universe.
+On each universe, a dutch auction is held where people are bidding ETH in exchange for REP.  The auction ends when it either has (A) raised enough ETH to restore the CASH contract on the universe to the pre-fork CASH levels or (B) has reached a point where the amount of REP being sold fully dillutes existing REP holders (minus epsilon).  The REP that auction participants receive will be minted and distributed when the auction finalizes.  The ETH proceeds of the auction will be added to the CASH contract on the auction's universe.
 
 If the auction fails to raise the necessary ETH (B), then the CASH contract's redemption price will be adjusted accordingly.  If the auction succeeds at raising enough ETH (A) then the CASH contract's redemption price will remain at its normal value.
 
 <details>
-<summary>$${\color{yellow}{\textsf{Other auctions may work here.}}}$$</summary>
+<summary>$${\color{BurntOrange}{\textsf{Other auctions may work here.}}}$$</summary>
 The main requirement of the auction is that it sells minted REP for ETH and raises as much ETH as possible (up to the needed amount to make CASH contract whole) while minting as little REP as possible.  Other useful properties include:
 
 * Low gas cost.
