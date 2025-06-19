@@ -14,6 +14,10 @@ The amount of ETH in the CASH contract is strictly constrained to be some multip
 
 ## $${\color{ProcessBlue}{\textsf{Escalation Game}}}$$
 If the initial report for a market is disputed, an escalation game ensues.  The escalation game is played with REP.  The escalation game works the same as Augur v2.
+
+* Time until stalemate: 8 weeks
+* REP Contributed at stalemate: 1% of total supply
+
 <details>
 <summary>$${\color{BurntOrange}{\textsf{Other escalation games can work here.}}}$$</summary>
 The main requirement is that any REP committed in the escalation game is committed to the chosen side in a fork should the escalation game reach a stalemate state.  Other things that make for a good escalation game:
@@ -28,11 +32,13 @@ The main requirement is that any REP committed in the escalation game is committ
 * **Broad Participation** - Maximize inclusion by making participation widely accessible
 </details>
 
-## $${\color{ProcessBlue}{\textsf{Market Migration}}}$$
-All markets will migrate to all possible universes once the escalation game reaches a stalemate.  The forking market will be finalized on each universe, but all other markets will return to pre-reporting state (possibly entering reporting immediately upon migration completion).
+## $${\color{ProcessBlue}{\textsf{Market Forking}}}$$
+Once the escalation game reaches a stalemate, all markets will fork and have exact copies in all possible universes.  The CASH token will also fork, and a copy with identical balances will exist in each universe.  The forking market will be finalized on each universe, but all other markets will return to pre-reporting state (possibly entering reporting immediately upon migration completion).
 
 ## $${\color{ProcessBlue}{\textsf{REP Migration}}}$$
 Once the escalation game has reached its stalemate state, all REP holders will have a time limited opportunity to migrate their REP to one of the child universes.  Any REP that participated in the escalation game automatically migrates to the universe it was staked on.  All other REP can choose any child universe.
+
+* Migration Time Limit: 8 weeks
 
 ## $${\color{ProcessBlue}{\textsf{CASH Migration}}}$$
 After the REP migration period ends, the system will look at how the REP is distributed across universes and migrate all CASH proportionately to the REP migration.  If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the CASH would migrate to universe A, 50% of CASH would migrate to universe B, and 30% of CASH would remain behind.
