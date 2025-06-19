@@ -71,8 +71,8 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * CASH value: $1
 * ETH value: $1
 * Auction Efficiency: 75%
-* DCF Change in True Universe: 100% (no change)
-* DCF Change in False Universe: 0% (wiped out)
+* DCF in True Universe: 100% (no change)
+* DCF in False Universe: 0% (wiped out)
 
 
 <details>
