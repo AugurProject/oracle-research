@@ -197,3 +197,5 @@ This directly lowers the benefits we get from Security Multiplier, the more slee
 > 
 > The total migration capacity is 50 $ETH$, while the sleeping open interest is 90 ETH. If we let the universes to split this 50\\%-50\\%:
  both universes each get: $25 ETH + 90 ETH / 2$ = 70eth, while each universe only has 25 ETH worth of REP. A rational actor would fork the system, burn the rep and claim the open interest.
+
+The sleeping $REP$ does not appear to be harmful for the system, as long as there's still enough $REP$ to trigger Fork and we don't allow too much of it to be rescued.
