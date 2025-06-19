@@ -36,9 +36,9 @@ If we assume we are the only auction participant ($\text{Bought REP} = \text{Min
 ```
 
 $REP$ holder should buy all the $REP$ from the auction if:
-$$
+```math
 \boxed{
 \text{Profit} > 0 \quad \text{if and only if} \quad
 \text{REP Price} < \frac{\text{FDV}}{\text{Minted REP}} \cdot \frac{\text{Your REP} + \text{Minted REP}}{\text{Migrated REP Supply} + \text{Minted REP}}
 }
-$$
+```
