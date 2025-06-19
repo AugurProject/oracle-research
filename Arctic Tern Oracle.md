@@ -162,7 +162,7 @@ If the system has been able to maintain a healthy fraction, it should hold that:
 
 As its important that migrating $REP$, at most migrates open interest that is worth the same. We can calculate: 
 ```math
-\text{Open Interest} \leq \text{Migrating Rep\%}*\text{REP Market Cap}
+\text{Open Interest} \leq \text{Migrating Rep\%} \cdot \text{REP Market Cap}
 ```
 
 Here, $\text{Migrating Rep\\%} = 100\\%-\text{Sleeping REP\\%}$, we can also assign $\text{Realized Security Multiplier}$ to get:
@@ -191,7 +191,7 @@ This directly lowers the benefits we get from Security Multiplier, the more slee
 > The system has forked to 5% A and 5% B and 90% of open interest is sleeping. REP Market Cap is 500 ETH and open interest is 100 ETH
 >
 > Realized REP Security Multiplier: $\frac{500 ETH}{100 ETH} = 5$
-> This system is secure as we can handle $max(100\\%-\frac{100\\%}{5},0) = 80\\%$ open interest.
+> This system is secure as we can handle $max(100\\%-\frac{100\\%}{5}, 0) = 80\\%$ open interest.
 > - $REP_{a}$ has 5% migration capacity: $5\\% \cdot 500 ETH = 25 ETH$
 > - $REP_{b}$ has 5% migration capacity: $5\\% \cdot 500 ETH = 25 ETH$
 > 
