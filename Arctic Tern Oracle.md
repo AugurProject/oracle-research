@@ -49,7 +49,7 @@ A fork splits the original $REP$ into multiple universes, each receiving a fract
 To balance this out, we can mint $60\\%$ additional $REP_A$ tokens, restoring the $REP_A$ supply in universe A to match the original. These newly minted tokens can be distributed to open interest holders to compensate for the lost $60\\%$ of open interest. The open interest holders in universe A would end up with:
 
 ```math
-\text{New Open Interest} = \text{Original Open Interest} \cdot 40\% + \text{REP A Market Cap} \cdot 60\%
+\text{New Open Interest} = \text{Original Open Interest} \cdot 40\\% + \text{REP A Market Cap} \cdot 60\\%
 ```
 
 Assuming:
@@ -68,11 +68,11 @@ The net gain for open interest holders depends on two factors:
 
 Since open interest holders can profit from both attacker-induced and inactive (or "sleeping") $REP$, this opens the door to an opportunistic value capture attack on the system.
 
-Suppose $10\%$ of the total $REP$ and corresponding open interest migrates to a false universe, denoted as $REP_{lie}$. In this case, $10\%$ additional $REP$ is minted in the correct universe, $REP_{truth}$, and distributed to open interest holders there as compensation.
+Suppose $10\\%$ of the total $REP$ and corresponding open interest migrates to a false universe, denoted as $REP_{lie}$. In this case, $10\\%$ additional $REP$ is minted in the correct universe, $REP_{truth}$, and distributed to open interest holders there as compensation.
 
-An opportunistic actor could exploit this by generating as much open interest as possible just before the fork, aiming to claim a disproportionate share of the newly minted $REP_{truth}$. Since $90\%$ of the open interest remains in $REP_{truth}$, the attacker recovers most of their open interest ($90\%$) while also gaining bonus $REP_{truth}$ at cost of $10\%$ in open interest.
+An opportunistic actor could exploit this by generating as much open interest as possible just before the fork, aiming to claim a disproportionate share of the newly minted $REP_{truth}$. Since $90\\%$ of the open interest remains in $REP_{truth}$, the attacker recovers most of their open interest ($90\\%$) while also gaining bonus $REP_{truth}$ at cost of $10\\%$ in open interest.
 
-In the worst-case scenario, nearly all of the open interest (except for a small $\epsilon$) is controlled by the Opportunist. They then receive nearly $100\%$ of the bonus $REP_{truth}$, while the small fraction of honest open interest holders (holding $\epsilon$) receives just enough $REP_{truth}$ to break even. However, if $REP_{truth}$ is volatile, even honest traders may face losses despite this compensation.
+In the worst-case scenario, nearly all of the open interest (except for a small $\epsilon$) is controlled by the Opportunist. They then receive nearly $100\\%$ of the bonus $REP_{truth}$, while the small fraction of honest open interest holders (holding $\epsilon$) receives just enough $REP_{truth}$ to break even. However, if $REP_{truth}$ is volatile, even honest traders may face losses despite this compensation.
 
 An Opportunist will find it profitable to mint new open interest up to the limit where:
 ```math
@@ -139,3 +139,61 @@ This method effectively sacrifices a fraction of open interest to preserve the i
 1) Creating open interest has a cost (onetime / time based)
 2) Introduce hard open interest creation cap
 3) Burn exess open interest in order to stay under the limit
+
+## Sleeping REP
+A core challenge in the system is that sleeping $REP$ does not migrate any open interest. Since, by definition, sleeping $REP$ has no power to move open interest, we allow the active $REP$ — both $REP_{truth}$ and $REP_{lie}$ — to migrate on behalf of the sleeping $REP$'s share of open interest. However, this ability must be limited.
+
+To maintain security, the system must enforce that the amount of open interest migrated does not exceed the value of the migrating $REP$:
+
+```math
+\text{Migrating Open Interest} < \text{Migrating REP}
+```
+
+### How much we can rescue?
+
+Let's define Realized $REP$ Security Multiplier, that defines how much more valuable $REP$ is compared to open interest being secured:
+```math
+\text{Realized REP Security Multiplier} = \frac{\text{Rep Market Cap}}{\text{Open Interest}}
+```
+If the system has been able to maintain a healthy fraction, it should hold that:
+```math
+\text{Realized Security Multiplier} \geq \text{REP Security Multiplier}
+```
+
+As its important that migrating $REP$, at most migrates open interest that is worth the same. We can calculate: 
+```math
+\text{Open Interest} \leq \text{Migrating Rep\\%}*\text{REP Market Cap}
+```
+
+Here, $\text{Migrating Rep\\%} = 100\\%-\text{Sleeping REP\\%}$, we can also assign $\text{Realized Security Multiplier}$ to get:
+
+```math
+\text{Max Sleeping REP \\%} = max(100\\% - \frac{100\\%}{\text{Realized Security Multiplier}}, 0\\%)
+```
+
+This directly lowers the benefits we get from Security Multiplier, the more sleeping $REP$ we allow to migrate (capped by how much of if exists), the easier its to attack the system. We might adjust the max amount down by replacing $\text{Realized Security Multiplier}$ in the equation with a smaller value, or by directly subtracting percentages from the end result.
+
+> \[!NOTE]
+>
+> #### Example: Sleeping REP migration Happy Case
+> The system has forked to 10% A and 30% B and 70% of open interest is sleeping. REP Market Cap is 500 ETH and open interest is 100 ETH
+>
+> Realized REP Security Multiplier: $\frac{500 ETH}{100 ETH} = 5$
+> This system is secure as we can handle $max(100\\%-\frac{100\\%}{5},0) = 80\\%$ open interest.
+> - $REP_{a}$ has 10% migration capacity: $10\\% \cdot 500 ETH = 50 ETH$
+> - $REP_{b}$ has 30% migration capacity: $30\\% \cdot 500 ETH = 150 ETH$
+> 
+> The total migration capacity is 200 $ETH$, which is double the original open interest!
+
+> \[!NOTE]
+>
+> #### Example: Sleeping REP migration A Sad Case
+> The system has forked to 5% A and 5% B and 90% of open interest is sleeping. REP Market Cap is 500 ETH and open interest is 100 ETH
+>
+> Realized REP Security Multiplier: $\frac{500 ETH}{100 ETH} = 5$
+> This system is secure as we can handle $max(100\\%-\frac{100\\%}{5},0) = 80\\%$ open interest.
+> - $REP_{a}$ has 5% migration capacity: $5\\% \cdot 500 ETH = 25 ETH$
+> - $REP_{b}$ has 5% migration capacity: $5\\% \cdot 500 ETH = 25 ETH$
+> 
+> The total migration capacity is 50 $ETH$, while the sleeping open interest is 90 ETH. If we let the universes to split this 50\\%-50\\%:
+ both universes each get: $25 ETH + 90 ETH / 2$ = 70eth, while each universe only has 25 ETH worth of REP. A rational actor would fork the system, burn the rep and claim the open interest.
