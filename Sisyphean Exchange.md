@@ -166,11 +166,30 @@ Unless otherwise specified, all scenarios below have the following baseline:
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{DCF Harmed: TODO}}}$$
+## $${\color{ProcessBlue}{\textsf{DCF Harmed: DCF Decreases After Fork, Middling Attack, No Sleeping, True Auction Success}}}$$
 
 </summary>
 
-TODO
+* DCF in True Universe: 50% ($100 after fork)
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises 47.5 ETH, and mints 65 REP (rounded for simplicity).
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
+## Outcome
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 75 REP worth $100 total, REP-True holders gain $25 ($0.333/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $142.5 net.
+* Defenders gained $25 net.
+* Traders lost nothing.
+* Auction participants profited $17.5.
+* Truemarkets gained $100 (DCF must have gone somewhere)
 
 </details>
 
