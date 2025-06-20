@@ -1,0 +1,76 @@
+# Oracle and Augur Design Dictionary
+- **[Artic Tern](/Arctic%20Tern%20Oracle.md)**: The Arctic Tern Oracle is a [Partial Colored Coin Oracle](/Partial%20Colored%20Coins.md) designed to shift the volatility risk of $REP$ after a fork from open interest holders to $REP$ holders.
+- **Attack**: An attempt to extract value from the protocol that is against the intention of the system.
+- **Auction**: A way to sell a lot assets at once to a market and extract price information about the asset. [Wikipedia Entry](https://en.wikipedia.org/wiki/Auction)
+- **Augur V1**: Augur Version 1 oracle. [Augur V1 Whitepaper](https://github.com/AugurProject/whitepaper/releases/latest/download/augur-whitepaper-v1.pdf)
+- **Augur V2**: Augur Version 2 oracle. [Augur V2 Whitepaper](https://github.com/AugurProject/whitepaper/releases/latest/download/augur-whitepaper-v2.pdf)
+- **Assumption**: Game theoretical assumptions are assumptions on the systems initial state, E.G, we often assume users are greedy, users prefer more money to less money and act accordingly.
+- **[Amoveo](https://github.com/zack-bitcoin/amoveo-docs/blob/master/design/)**: A colored coin based blockchain
+- **Bob Oracle (Bobacle)**: Oracle where a single person, or simple address can decide the outcome of the oracle.
+- **[Colored Coin Oracle](/Colored%20Coins.md)**: Each time the system encounters a decision, the chain of decisions splits-each possible outcome unfolding in its own branch. These branches can then continue to fork with every subsequent decision.
+- **CASH**: Currency used inside a prediction market, can be E.g, ETH, DAI or similar token.
+- **Complete Set**: Set of shares that can be merged to something bigger. Eg, on a pure yes-no market, you can merge yes and no share into complete set that is worth 1 unit of value.
+- **Contentious Market**: A market where many people think resolve differently and it is not clear to anyone which is the correct outcome. These markets should resolve into Invalid in Augur. However, there can be contention between invalid and other option as well.
+- **Dashboard Security**: Many oracle designs require $\text{Open Interest} < \text{REP Market Cap}$, which requires a price oracle to guarantee on-chain. Dashboard security refers to creating an off-chain dashboard showing these values, making users aware if the inequality doesn't hold, encouraging them to stop using the system. This simplifies contract design significantly.
+- **[Discounted Cash Flow (DCF)](https://www.investopedia.com/terms/d/dcf.asp)**: A valuation method that estimates the value of an investment using its expected future cash flows.
+- **Enshrined Oracle**: An oracle that is built into deep down into the protocol. E.g, Ethereum has an Enshired Oracle to timestamp, block numbers, blockhash, transaction inclusion, ethereum state etc.
+- **Escalation Game**: An oracle mechanism begins with one participant proposing an outcome and placing a monetary stake behind it. Another participant can challenge this outcome by proposing an alternative and staking a larger amount. If the escalation process has no upper limit on stakes, it functions as an implementation of a Keynesian Beauty Contest. If there's a cap on how much can be staked, it becomes a non-finalizing oracle.
+- **Economic Security**: A system is said to be Economically Secure if someone has no game theoretical incentive to **attack** the system.
+- **ETH**: Ethereum token, often an external asset used as open interest in Augur
+- **External asset**: Some valuable asset that Augur cannot split, but Augur has to decide where it ends up in
+- **False Universe**: An universe which is believed to be based on lie.
+- **Finalizing Oracle**: An oracle that produces a single final outcome. Price oracles are often finalizing oracles that they resolve into a single value. Finalizing oracles are better than non-finalizing oracles in terms that systems using the finalizing oracles can just read the single value without any subjective beliefs.
+- **Fork**: An event where one universe splits into multiple universes because no finality was found, splitting REP token into multiple REP tokens.
+- **Fork Cost**: Can mean how much it costs to trigger fork, or how much the fork costs to the whole protocol. Preferably the cost to trigger is more than cost to the protocol for system to be economically secure.
+- **Fully Diluted Value (FDV)**: Fully diluted valuation (FDV) is the total value of a cryptocurrency project considering all of its tokens that are in circulation. It is used by investors to gauge the future potential of the project, just like the total number of issuable shares in the stock market. [Coingecko source](https://www.coingecko.com/learn/what-is-fully-diluted-valuation-fdv-in-crypto).
+- **[Game Theory](https://en.wikipedia.org/wiki/Game_theory)**: The branch of mathematics concerned with the analysis of strategies for dealing with competitive situations where the outcome of a participant's choice of action depends critically on the actions of other participants. 
+- **Generalized Oracle**: An oracle that can answer ANY question
+- **Griefing**: An act of deliberately disrupting or annoying other users
+- **Griefing Factor**: A fraction on how much you need to spend resources to make other people to spend resources. Griefing Factor > 1, means you can spend less money to make other people to more lose money than you, while Griefing Factor < 1 requires lest you spend more money than your victims lose.
+- **[Initial Coin Offering Oracle](/Initial%20Coin%20Offering%20Oracle)**: An oracle that conducts ICO everytime there's a fork.
+- **Incentive Design**: A way to create incentives to userst to behave in a way that is good for the system. E. g, prediction market rewards users for betting correctly and this allows predicion markets to give probability estimates on the events.
+- **Invalid**: An outcome AugurV2 market can resolve if the market is invalid, e. g, it resolving to any other outcom does not feel correct
+- **Invalid Market**: A market that has resolved to invalid, or is about to resolve into invalid.
+- **[Lazy Forking](/Lazy%20Forking%20In%20Partial%20Colored%20Coins.md)**: A way to fork only one market and fork the other markets later.
+- **Lie**: Opposite of **Truth**. Something that is believed to be false.
+- **Lie Universe**: Universe that is based on a **Lie**.
+- **[Market Capitalization, Market Cap, MCap](https://en.wikipedia.org/wiki/Market_capitalization)**: Total value of a publicly traded company's outstanding common shares owned by stockholders
+- **Minting**: A way to issue new tokens. E.g, forking protocols often mints new tokens for new universes.
+- **Minting fork**: A fork where participants can mint more tokens to participate in the fork.
+- **Memetic Value**: Value cryptocurrency tokens can have memetic value that is not based on their fundamentals.
+- **Market**: A single prediction market about a single question. Traders can trade on the market and the market can contain **Open Interest**.
+- **Non Finalizing Oracle**: An oracle that can return multiple outcomes, unable to determine which outcome is the final answer.
+- **[Open Interest (OI)](https://www.investopedia.com/terms/o/openinterest.asp)**: Open interest is the total number of outstanding derivative contracts for an asset—such as options or futures—that have not been settled. In Prediction Markets this often refers to the total value of the bets outstanding on the platform.
+- **Open Interest Holder (OI Holder)**: Someone who has a claim (eg, a yes share) to open interest held by a prediction market. 
+- **Opportunistic Actor**: Actor that can do something given the system is in some state. E.g, if there's money on the ground, Opportunistic Actor sees a profit and picks the cash up.
+- **Oracle**: A system that provides an answer to a question. Oracles can be specialized in questions they can answer.
+- **Parasitic Interest**: External interests to the protocol. Game theoretical systems can be secure if they are considered in a closed system, but unsecure if someone adds external interests to them.
+- **[Partial Colored Coin Oracle](/Partial%20Colored%20Coins.md)**: needi
+- **PBMF (Price-Based Mintable Forking)**: *[Definition not provided]*
+- **Post-Fork**: The state the system is after fork
+- **[Prediction Market](https://en.wikipedia.org/wiki/Prediction_market)**: An market that enable betting on future outcomes.
+- **Price oracle**: An Oracle that provides a price information of some asset. Uniswap, auctions and such can be used as price oracles.
+- **Pre-fork**: State of the system before fork has occured, generally just right before the fork occured.
+- **[PolyMarket](https://polymarket.com/)**: A prediction market implementation.
+- **REP**: Reputation token. An asset in the Augur system that receives trading fees of Augur and can fork into multiple REP tokens during a fork
+- **REP Holder**: User that is holding $REP$ tokens
+- **REP/OI Migration**: A way to migrate REP or Open Interest from an universe branch to another. Artic Tern uses this method to recover capital.
+- **$REP_{lie}$**: REP token of the lie universe of the system. The lie is determined by subjective opinion of users, different users might consider diffent rep token to be the lie token.
+- **$REP_{truth}$**: REP token of the truth universe of the system. The truth is determined by subjective opinion of users, different users might consider diffent rep token to be the truth token.
+- **RepV1**: Reputation token for Augur V1.
+- **RepV2**: Reputation token for Augur V2.
+- **Robust System**: A system that still works, even if its parameters deviate a bit from the assumptions in reality.
+- **Security Multiplier**: How much higher the REP market cap is targeted to be relative to open interest
+- **Sleeping REP**: REP that does not react to fork event. This can be because of lost private keys, user doesnt care or user does not notice that they should act.
+- **Suicidal Whale**: A person with a lot money that do not mind to burn it to cause harm to other users.
+- **Secure Oracle**: Oracle that can secure users (eg, open interest holders, defi protocol assets) using it against some assumptions that can be thought to be reasonable enough (subjective).
+- **Speculative Value**: Added value that an asset can have that is not based on its fundamental value
+- **Schelling Point**: A Schelling point, also known as a focal point, is a solution that people tend to choose in situations where they need to coordinate their actions but cannot communicate with each other.
+- **[Schelling Coin](https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed)**: An oracle that is based on **Schelling Point**s.
+- **Trader**: An actor that is doing bets on prediction market and commiting open interest to the platform.
+- **Truth**: Opposite of lie, something that is believed to be correct.
+- **[TruthCoin](https://www.truthcoin.info/papers/truthcoin-whitepaper.pdf)**: The first blockchain based prediction market concept
+- **Universe**: A branch in a forking oracle. Universe contains all the markets and open interest, when Universe forks, it produces child universes.
+- **[Keynesian Beauty Contest (KBC)](https://en.wikipedia.org/wiki/Keynesian_beauty_contest)**: A beauty contest in which the most popular outcome is selected as the oracle resolution.
+- **Yes-No Market/Binary market**: A market that can resolve into two outcomes
+- **Yes/No/Invalid Share**: A market share that resolves into 1 unit of value if the market resolves as Yes/No/Invalid respectively.
