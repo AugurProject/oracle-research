@@ -46,7 +46,7 @@
 - **Oracle**: A system that provides an answer to a question. Oracles can be specialized in questions they can answer.
 - **Parasitic Interest**: External interests to the protocol. Game theoretical systems can be secure if they are considered in a closed system, but unsecure if someone adds external interests to them.
 - **[Partial Colored Coin Oracle](/Partial%20Colored%20Coins.md)**: needi
-- **PBMF (Price-Based Mintable Forking)**: *[Definition not provided]*
+- **[PBMF (Price-Based Mintable Forking)](https://drive.google.com/file/d/1G-xEuZDtAlQ33PUVjS7gmyGj82bVpQdn/edit)**: A forking design where users utilize minting forking and decide the oracles final outcome based on price differences.
 - **Post-Fork**: The state the system is after fork
 - **[Prediction Market](https://en.wikipedia.org/wiki/Prediction_market)**: An market that enable betting on future outcomes.
 - **Price oracle**: An Oracle that provides a price information of some asset. Uniswap, auctions and such can be used as price oracles.
