@@ -189,7 +189,7 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * Defenders gained $25 net.
 * Traders lost nothing.
 * Auction participants profited $17.5.
-* Truemarkets gained $100 (DCF must have gone somewhere)
+* Truemarkets™ gained $100 (DCF must have gone somewhere)
 
 </details>
 
