@@ -196,11 +196,28 @@ Unless otherwise specified, all scenarios below have the following baseline:
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{Contentious Market: TODO}}}$$
+## $${\color{ProcessBlue}{\textsf{Contentious Market: DCF Splits Between Universes, No Sleeping, True and False Auctions Success}}}$$
 
 </summary>
 
-TODO
+### REP Migration
+* 100 REP -> A
+* 100 REP -> B
+### CASH Migration
+* 25 CASH -> A
+* 25 CASH -> B
+### Auction
+* A auction raises 25 ETH, and mints 35 REP-A (rounded for simplicity).
+* B auction raises 25 ETH, and mints 35 REP-B (rounded for simplicity).
+### Outcome
+* A universe has 50 ETH in CASH available for distribution to winners.
+* A universe has 135 REP worth $100 total, REP-A holders lose $35 (-$0.259/REP).
+* B universe has 50 ETH in CASH available for distribution to winners.
+* B universe has 135 REP worth $100 total, REP-B holders gain $15 ($0.259/REP).
+* A migrators lost $35 net
+* B migrators lost $35 net.
+* Traders lost **gained** $50.
+* Auction participants profited $20.
 
 </details>
 
