@@ -96,10 +96,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 193.5 REP worth $200 total, REP-True holders gain $6.5 ($0.0336/REP).
 * False universe has 2.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,010 REP worth $0 total.
-* Attacker lost $7.5 net.
-* Defenders gained $6.5 net.
-* Traders lost nothing.
-* Auction participants profited $1.
+* Attacker lost $${\color{Red}{\textsf{\\$7.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$6.5}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$1}}}$$.
 
 </details>
 
@@ -124,10 +124,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 75 REP worth $200 total, REP-True holders gain $125 ($1.667/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $142.5 net.
-* Defenders gained $125 net.
-* Traders lost nothing.
-* Auction participants profited $17.5.
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$125}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
 
 </details>
 
@@ -155,11 +155,11 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False universe has 3.75 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
 * 45 CASH distributed to 180 sleeping REP holders.
-* Attacker lost $11.25 net.
-* Defenders gained $130 net.
-* Sleeping REP holders lost $135 net.
-* Traders lost nothing.
-* Auction participants profited $16.25.
+* Attacker lost $${\color{Red}{\textsf{\\$11.25}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$130}}}$$.
+* Sleeping REP holders lost $${\color{Red}{\textsf{\\$135}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$16.25}}}$$.
 
 </details>
 
@@ -185,11 +185,11 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 75 REP worth $100 total, REP-True holders gain $25 ($0.333/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $142.5 net.
-* Defenders gained $25 net.
-* Traders lost nothing.
-* Auction participants profited $17.5.
-* Truemarkets™ gained $100 (DCF must have gone somewhere)
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$25}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
+* Truemarkets™ gained $${\color{OliveGreen}{\textsf{\\$100}}}$$ (DCF must have gone somewhere)
 
 </details>
 
@@ -214,10 +214,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * A universe has 135 REP worth $100 total, REP-A holders lose $35 (-$0.259/REP).
 * B universe has 50 ETH in CASH available for distribution to winners.
 * B universe has 135 REP worth $100 total, REP-B holders gain $15 ($0.259/REP).
-* A migrators lost $35 net
-* B migrators lost $35 net.
-* Traders lost **gained** $50.
-* Auction participants profited $20.
+* A migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
+* B migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
+* Traders lost $${\color{OliveGreen}{\textsf{\\$50}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$20}}}$$.
 
 </details>
 
@@ -243,9 +243,9 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 1,000,010 REP worth $0 total, REP-True holders **lose** ~$200 (-$1/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $142.5 net.
-* Defenders **lost** $10 net.
-* Traders **lost** $47.5.
-* Auction participants profited $0.
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders lost $${\color{Red}{\textsf{\\$10}}}$$.
+* Traders lost $${\color{Red}{\textsf{\\$47.5}}}$$.
+* Auction participants profited $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
 
 </details>
