@@ -196,7 +196,7 @@ Unless otherwise specified, all scenarios below have the following baseline:
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{Contentious Market: DCF Splits Between Universes, No Sleeping, True and False Auctions Success}}}$$
+## $${\color{Magenta}{\textsf{Contentious Market: DCF Splits Between Universes, No Sleeping, True and False Auctions Success}}}$$
 
 </summary>
 
@@ -224,7 +224,7 @@ Unless otherwise specified, all scenarios below have the following baseline:
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{All Auctions Fail: TODO}}}$$
+## $${\color{Magenta}{\textsf{All Auctions Fail: TODO}}}$$
 
 </summary>
 
