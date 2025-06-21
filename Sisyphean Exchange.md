@@ -224,10 +224,28 @@ Unless otherwise specified, all scenarios below have the following baseline:
 <details>
 <summary>
 
-## $${\color{Magenta}{\textsf{All Auctions Fail: TODO}}}$$
+## $${\color{Magenta}{\textsf{All Auctions Fail: Strong Attack, No Sleeping, True Auction Failure, DCF Wiped Out}}}$$
 
 </summary>
 
-TODO
+* DCF in True Universe: 0% (wiped out)
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises ~0 ETH, and mints 1,000,000 REP-True.
+* False auction raises ~0 ETH, and mints 1,000,000 REP-False.
+## Outcome
+* True universe has 2.5 ETH in CASH available for distribution to winners.
+* True universe has 1,000,010 REP worth $0 total, REP-True holders **lose** ~$200 (-$1/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $142.5 net.
+* Defenders **lost** $10 net.
+* Traders **lost** $47.5.
+* Auction participants profited $0.
 
 </details>
