@@ -218,7 +218,7 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * B universe has 135 REP worth $100 total, REP-B holders gain $15 ($0.259/REP).
 * A migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
 * B migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
-* Traders lost $${\color{OliveGreen}{\textsf{\\$50}}}$$.
+* Traders gained $${\color{OliveGreen}{\textsf{\\$50}}}$$.
 * Auction participants profited $${\color{OliveGreen}{\textsf{\\$20}}}$$.
 
 </details>
