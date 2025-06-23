@@ -51,6 +51,7 @@
 - **[Prediction Market](https://en.wikipedia.org/wiki/Prediction_market)**: An market that enable betting on future outcomes.
 - **Price oracle**: An Oracle that provides a price information of some asset. Uniswap, auctions and such can be used as price oracles.
 - **Pre-fork**: State of the system before fork has occured, generally just right before the fork occured.
+- **Pre-stake**: Way to commit to stake funds to some outcome without really staking them yet.
 - **[PolyMarket](https://polymarket.com/)**: A prediction market implementation.
 - **REP**: Reputation token. An asset in the Augur system that receives trading fees of Augur and can fork into multiple REP tokens during a fork
 - **REP Holder**: User that is holding $REP$ tokens
