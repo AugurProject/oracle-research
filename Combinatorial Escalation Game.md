@@ -7,7 +7,10 @@ In the Combinatorial Escalation Game, participants place bets on combinations of
 * **Combination Bets**: Players can include any number of markets in a bet, but each market may only appear once per bet.
 * **Partial Bets**: Bets do not need to cover all disputed markets. Omitting a market indicates that the player has no preference regarding its outcome. This commonly happens when new market disputes are added after a bet is already placed.
 * **Bet Returning Conditions**: The staked $REP$ on a bet is only returned back if **all** listed outcomes match the final resolutions exactly. For example, the bet `[A-True, B-False]` is only returned if *A* resolves to **True** and *B* to **False**.
-* **Partial Winning**: The bet can win partially when E. g, market A resolves to true first, which pays out $REP$, while the bet itself is still being locked inside the system. 
+* **Partial Winning**: The bet can win partially when E. g, market A resolves to true first, which pays out $REP$, while the bet itself is still being locked inside the system.
+
+>![WARNING]
+>TODO: Partial winnings could be locked into the contract, and only paid out if the whole bets turn out to be correct. If one of the bets fails, the wins are burned (the bet stake itself is paid to winner). This removes incentive to reorder markets, but its still possible to grief profit from other users by getting it burnt.
 
 ### Bet Amendments:
 Players may freely extend existing bets by adding predictions for newly introduced markets. For instance, if a player originally wagered 100 $REP$ on `[A-True]`, they can later update it to `[A-True, B-False]` - still with the same 100 $REP$ stake - without additional cost.
