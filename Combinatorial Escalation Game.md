@@ -17,7 +17,7 @@ Each market runs its own [Fluid Escalation Game](/Fluid%20Escalation%20Game.md).
 
 When a market's Escalation Game resolves - either by reaching a resolution or via a system fork - all combinatorial bets that include a losing outcome for that market are removed from the system. The full stake of these losing bets is paid out to the winning side of the resolving market. Importantly, once the stake is paid out, it is also withdrawn from the escalation games of any other markets that the bet was touching.
 
->[INFO]
+>[NOTE]
 > #### Example:
 > Suppose Market A resolves to True, and there's a 100 $REP$ bet on `[A-False, B-True]`. This is a losing bet, so:
 > * The 100 $REP$ is paid to the winning side of Market A.
@@ -39,7 +39,7 @@ When a market forks, the system must choose how to handle the unresolved combina
    * A bet migrated into one universe is treated as **withdrawn** in all others.
    * The Fluid Escalation Games update each market’s resolution time, adding delay to reflect the shifting state and uncertainty during a fork.
 
-> [!INFO]
+> [!NOTE]
 > #### Example: Resolve Out Of Order
 > 1) Bob stakes 100 $REP$ on [A-True, B-False]
 > 2) Alice disputes with 200 $REP$ on [A-False, B-False]. Tally:
@@ -50,7 +50,7 @@ When a market forks, the system must choose how to handle the unresolved combina
 > - A-True = 100 $REP$
 > - A-False = 200 $REP$
 
-> [!INFO]
+> [!NOTE]
 > #### Example: Stake pulling when REP is lost to a bet
 > 1) Bob stakes 100 $REP$ on [A-True, B-True]
 > 1) Cecilia stakes 200 $REP$ on [A-False]

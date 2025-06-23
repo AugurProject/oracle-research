@@ -25,3 +25,5 @@ Research notes for oracle design
 
 ## Escalation Games
 [Fluid Escalation Game](/Fluid%20Escalation%20Game.md)
+
+[Combinatorial Escalation Game](/Combinatorial%20Escalation%20Game)
