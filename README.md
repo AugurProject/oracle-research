@@ -22,3 +22,6 @@ Research notes for oracle design
 [Artic Tern Auction REP Holder Optimization Problem](/Artic%20Tern%20Auction%20REP%20Holder%20Optimization%20Problem.md)
 
 [Sisyphean Exchange](/Sisyphean%20Exchange.md)
+
+## Escalation Games
+[Fluid Escalation Game](/Fluid%20Escalation%20Game.md)
