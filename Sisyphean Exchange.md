@@ -46,9 +46,11 @@ After the REP migration period ends, the system will look at how the REP is dist
 The CASH that remains behind is distributed to REP holders who failed to migrate.  The REP becomes worthless at this point and serves no purpose other than to redeem for CASH.  Transfers remain enabled so people can withdraw REP from exchanges and other contracts in order to redeem for CASH, but it no longer serves any purpose within the system.
 
 ## $${\color{ProcessBlue}{\textsf{CASH for REP Auction}}}$$
-On each universe, a dutch auction is held where people are bidding ETH in exchange for REP.  The auction ends when it either has (A) raised enough ETH to restore the CASH contract on the universe to the pre-fork CASH levels or (B) has reached a point where the amount of REP being sold fully dillutes existing REP holders (minus epsilon).  The REP that auction participants receive will be minted and distributed when the auction finalizes.  The ETH proceeds of the auction will be added to the CASH contract on the auction's universe.
+On each universe, a dutch auction is held where people are bidding ETH in exchange for REP.  The system starts by offering `rep_supply/1,000,000` REP for the needed amount of CASH and the amount of REP offered increases every second until it reaches `rep_supply*1,000,000` REP offered.  The auction ends when either (A) one or more parties combined are willing to buy the CASH deficit worth of ETH for the current REP price or (B) it reaches the end without enough ETH willing to buy even at the final price.  The REP that auction participants receive will be minted and distributed when the auction finalizes.  The ETH proceeds of the auction will be added to the CASH contract on the auction's universe.
 
 If the auction fails to raise the necessary ETH (B), then the CASH contract's redemption price will be adjusted accordingly.  If the auction succeeds at raising enough ETH (A) then the CASH contract's redemption price will remain at its normal value.
+
+In the case of a failed auction (failure to raise enough ETH to cover traders before minting 1000x of migrated supply of REP), all auction participants will be refunded and the auction will be cancelled.  The universe will shutdown except for withdraws of OI at a reduced price from their intended value.
 
 <details>
 <summary>$${\color{BurntOrange}{\textsf{Other auctions may work here.}}}$$</summary>
@@ -96,10 +98,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 193.5 REP worth $200 total, REP-True holders gain $6.5 ($0.0336/REP).
 * False universe has 2.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,010 REP worth $0 total.
-* Attacker lost $7.5 net.
-* Defenders gained $6.5 net.
-* Traders lost nothing.
-* Auction participants profited $1.
+* Attacker lost $${\color{Red}{\textsf{\\$7.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$6.5}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$1}}}$$.
 
 </details>
 
@@ -124,10 +126,10 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * True universe has 75 REP worth $200 total, REP-True holders gain $125 ($1.667/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $142.5 net.
-* Defenders gained $125 net.
-* Traders lost nothing.
-* Auction participants profited $17.5.
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$125}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
 
 </details>
 
@@ -155,43 +157,97 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False universe has 3.75 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
 * 45 CASH distributed to 180 sleeping REP holders.
-* Attacker lost $11.25 net.
-* Defenders gained $130 net.
-* Sleeping REP holders lost $135 net.
-* Traders lost nothing.
-* Auction participants profited $16.25.
+* Attacker lost $${\color{Red}{\textsf{\\$11.25}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$130}}}$$.
+* Sleeping REP holders lost $${\color{Red}{\textsf{\\$135}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$16.25}}}$$.
 
 </details>
 
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{DCF Harmed: TODO}}}$$
+## $${\color{ProcessBlue}{\textsf{DCF Harmed: DCF Decreases After Fork, Middling Attack, No Sleeping, True Auction Success}}}$$
 
 </summary>
 
-TODO
+* DCF in True Universe: 50% ($100 after fork)
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises 47.5 ETH, and mints 65 REP (rounded for simplicity).
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
+## Outcome
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 75 REP worth $100 total, REP-True holders gain $25 ($0.333/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$25}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
+* Truemarkets™ gained $${\color{OliveGreen}{\textsf{\\$100}}}$$ (DCF must have gone somewhere)
 
 </details>
 
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{Contentious Market: TODO}}}$$
+## $${\color{Magenta}{\textsf{Contentious Market: DCF Splits Between Universes, No Sleeping, True and False Auctions Success}}}$$
 
 </summary>
 
-TODO
+### REP Migration
+* 100 REP -> A
+* 100 REP -> B
+### CASH Migration
+* 25 CASH -> A
+* 25 CASH -> B
+### Auction
+* A auction raises 25 ETH, and mints 35 REP-A (rounded for simplicity).
+* B auction raises 25 ETH, and mints 35 REP-B (rounded for simplicity).
+### Outcome
+* A universe has 50 ETH in CASH available for distribution to winners.
+* A universe has 135 REP worth $100 total, REP-A holders lose $35 (-$0.259/REP).
+* B universe has 50 ETH in CASH available for distribution to winners.
+* B universe has 135 REP worth $100 total, REP-B holders gain $15 ($0.259/REP).
+* A migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
+* B migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
+* Traders gained $${\color{OliveGreen}{\textsf{\\$50}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$20}}}$$.
 
 </details>
 
 <details>
 <summary>
 
-## $${\color{ProcessBlue}{\textsf{All Auctions Fail: TODO}}}$$
+## $${\color{Magenta}{\textsf{All Auctions Fail: Strong Attack, No Sleeping, True Auction Failure, DCF Wiped Out}}}$$
 
 </summary>
 
-TODO
+* DCF in True Universe: 0% (wiped out)
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises ~0 ETH, and mints 1,000,000 REP-True.
+* False auction raises ~0 ETH, and mints 1,000,000 REP-False.
+## Outcome
+* True universe has 2.5 ETH in CASH available for distribution to winners.
+* True universe has 1,000,010 REP worth $0 total, REP-True holders **lose** ~$200 (-$1/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
+* Defenders lost $${\color{Red}{\textsf{\\$10}}}$$.
+* Traders lost $${\color{Red}{\textsf{\\$47.5}}}$$.
+* Auction participants profited $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
 
 </details>
