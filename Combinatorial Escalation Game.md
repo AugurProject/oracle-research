@@ -17,7 +17,7 @@ Each market runs its own [Fluid Escalation Game](/Fluid%20Escalation%20Game.md).
 
 When a market's Escalation Game resolves - either by reaching a resolution or via a system fork - all combinatorial bets that include a losing outcome for that market are removed from the system. The full stake of these losing bets is paid out to the winning side of the resolving market. Importantly, once the stake is paid out, it is also withdrawn from the escalation games of any other markets that the bet was touching.
 
->[NOTE]
+>[!NOTE]
 > #### Example:
 > Suppose Market A resolves to True, and there's a 100 $REP$ bet on `[A-False, B-True]`. This is a losing bet, so:
 > * The 100 $REP$ is paid to the winning side of Market A.
