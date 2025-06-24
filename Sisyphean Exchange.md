@@ -95,13 +95,13 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False auction raises ~0 ETH, and mints 1,000,000 REP-F.
 ### Outcome
 * True universe has 50 ETH in CASH available for distribution to winners.
-* True universe has 193.5 REP worth $200 total, REP-True holders gain $6.5 ($0.0336/REP).
+* True universe has 193.5 REP worth $200 total (~$1.034/REP).
 * False universe has 2.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,010 REP worth $0 total.
-* Attacker lost $${\color{Red}{\textsf{\\$7.5}}}$$.
-* Defenders gained $${\color{OliveGreen}{\textsf{\\$6.5}}}$$.
-* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
-* Auction participants profited $${\color{OliveGreen}{\textsf{\\$1}}}$$.
+* Attacker lost $${\color{Red}{\textsf{\\$10 -> \\$2.5 = -\\$7.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$190 -> \\$196.382 = \\$6.382}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$50 -> \\$50 = \\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$2.5 -> \\$3.618 = \\$1.118}}}$$.
 
 </details>
 
@@ -123,13 +123,13 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False auction raises ~0 ETH, and mints 1,000,000 REP-F.
 ## Outcome
 * True universe has 50 ETH in CASH available for distribution to winners.
-* True universe has 75 REP worth $200 total, REP-True holders gain $125 ($1.667/REP).
+* True universe has 75 REP worth $200 total ($2.667/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
-* Defenders gained $${\color{OliveGreen}{\textsf{\\$125}}}$$.
-* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
-* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
+* Attacker lost $${\color{Red}{\textsf{\\$190 -> \\$47.5 = -\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$10 -> \\$26.667 = \\$16.667}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$50 -> \\$50 = \\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$47.5 -> \\$173.333 = \\$125.833}}}$$.
 
 </details>
 
@@ -153,15 +153,15 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False auction raises ~0 ETH, and mints 1,000,000 REP-F.
 ## Outcome
 * True universe has 50 ETH in CASH available for distribution to winners.
-* True universe has 70 REP worth $200 total, REP-True holders gain $130 ($1.857/REP).
+* True universe has 70 REP worth $200 total ($2.857/REP).
 * False universe has 3.75 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
 * 45 CASH distributed to 180 sleeping REP holders.
-* Attacker lost $${\color{Red}{\textsf{\\$11.25}}}$$.
-* Defenders gained $${\color{OliveGreen}{\textsf{\\$130}}}$$.
-* Sleeping REP holders lost $${\color{Red}{\textsf{\\$135}}}$$.
-* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
-* Auction participants profited $${\color{OliveGreen}{\textsf{\\$16.25}}}$$.
+* Attacker lost $${\color{Red}{\textsf{\\$15 -> \\$3.75 = -\\$11.25}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$5 -> \\$14.286 = \\$9.286}}}$$.
+* Sleeping REP holders lost $${\color{Red}{\textsf{\\$180 -> \\$45 = -\\$135}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$50 -> \\$50 = \\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$48.75 -> \\$185.714 = \\$136.964}}}$$.
 
 </details>
 
@@ -184,14 +184,43 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False auction raises ~0 ETH, and mints 1,000,000 REP-F.
 ## Outcome
 * True universe has 50 ETH in CASH available for distribution to winners.
-* True universe has 75 REP worth $100 total, REP-True holders gain $25 ($0.333/REP).
+* True universe has 75 REP worth $100 total ($1.333/REP).
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
-* Defenders gained $${\color{OliveGreen}{\textsf{\\$25}}}$$.
-* Traders lost $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
-* Auction participants profited $${\color{OliveGreen}{\textsf{\\$17.5}}}$$.
+* Attacker lost $${\color{Red}{\textsf{\\$190 -> \\$47.5 = -\\$142.5}}}$$.
+* Defenders gained $${\color{OliveGreen}{\textsf{\\$10 -> \\$13.333 = \\$3.333}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$50 -> \\$50 = \\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$47.5 -> \\$86.667 = \\$39.167}}}$$.
 * Truemarkets™ gained $${\color{OliveGreen}{\textsf{\\$100}}}$$ (DCF must have gone somewhere)
+
+</details>
+
+<details>
+<summary>
+
+## $${\color{Magenta}{\textsf{Weak Auction: Strong Attack, No Sleeping, True Auction Success, Very Low Auction Efficiency}}}$$
+
+</summary>
+
+* Auction Efficiency: 5%
+## REP Migration
+* 10 REP -> True
+* 190 REP -> False
+## CASH Migration
+* 2.5 CASH -> True
+* 47.5 CASH -> False
+## Auction
+* True auction raises 47.5 ETH, and mints 950 REP.
+* False auction raises ~0 ETH, and mints 1,000,000 REP-F.
+## Outcome
+* True universe has 50 ETH in CASH available for distribution to winners.
+* True universe has 960 REP worth $200 total ($0.208/REP).
+* False universe has 47.5 ETH in CASH available for distribution to attacker.
+* False universe has 1,000,190 REP worth $0 total.
+* Attacker lost $${\color{Red}{\textsf{\\$190 -> \\$47.5 = -\\$142.5}}}$$.
+* Defenders lost $${\color{Red}{\textsf{\\$10 -> \\$2.083 = -\\$7.917}}}$$.
+* Traders lost $${\color{RoyalBlue}{\textsf{\\$50 -> \\$50 = \\$0}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$47.5 -> \\$197.917 = \\$150.417}}}$$.
 
 </details>
 
@@ -213,13 +242,13 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * B auction raises 25 ETH, and mints 35 REP-B (rounded for simplicity).
 ### Outcome
 * A universe has 50 ETH in CASH available for distribution to winners.
-* A universe has 135 REP worth $100 total, REP-A holders lose $35 (-$0.259/REP).
+* A universe has 135 REP worth $100 total ($0.741/REP).
 * B universe has 50 ETH in CASH available for distribution to winners.
-* B universe has 135 REP worth $100 total, REP-B holders gain $15 ($0.259/REP).
-* A migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
-* B migrators lost $${\color{Red}{\textsf{\\$35}}}$$.
-* Traders gained $${\color{OliveGreen}{\textsf{\\$50}}}$$.
-* Auction participants profited $${\color{OliveGreen}{\textsf{\\$20}}}$$.
+* B universe has 135 REP worth $100 total ($0.741/REP).
+* A migrators lost $${\color{Red}{\textsf{\\$100 -> \\$74.074 = -\\$25.926}}}$$.
+* B migrators lost $${\color{Red}{\textsf{\\$100 -> \\$74.074 = -\\$25.926}}}$$.
+* Traders gained $${\color{OliveGreen}{\textsf{\\$50 -> \\$100 = \\$50}}}$$.
+* Auction participants profited $${\color{OliveGreen}{\textsf{\\$50 -> \\$51.852 = \\$1.852}}}$$.
 
 </details>
 
@@ -242,12 +271,13 @@ Unless otherwise specified, all scenarios below have the following baseline:
 * False auction raises ~0 ETH, and mints 1,000,000 REP-False.
 ## Outcome
 * True universe has 2.5 ETH in CASH available for distribution to winners.
-* True universe has 1,000,010 REP worth $0 total, REP-True holders **lose** ~$200 (-$1/REP).
+* True universe has 1,000,010 REP worth $0 total.
 * False universe has 47.5 ETH in CASH available for distribution to attacker.
 * False universe has 1,000,190 REP worth $0 total.
-* Attacker lost $${\color{Red}{\textsf{\\$142.5}}}$$.
-* Defenders lost $${\color{Red}{\textsf{\\$10}}}$$.
-* Traders lost $${\color{Red}{\textsf{\\$47.5}}}$$.
-* Auction participants profited $${\color{RoyalBlue}{\textsf{\\$0}}}$$.
+* Attacker lost $${\color{Red}{\textsf{\\$190 -> \\$47.5 = -\\$142.5}}}$$.
+* Defenders lost $${\color{Red}{\textsf{\\$10 -> \\$0 = -\\$10}}}$$.
+* Traders lost $${\color{Red}{\textsf{\\$50 -> \\$2.5 = -\\$47.5}}}$$.
+* Auction participants profited $${\color{RoyalBlue}{\textsf{\\$0 -> \\$0 = \\$0}}}$$.
+* Truemarkets™ gained $${\color{OliveGreen}{\textsf{\\$200}}}$$ (DCF must have gone somewhere)
 
 </details>
