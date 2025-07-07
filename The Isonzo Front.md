@@ -81,7 +81,7 @@ If three sides are involved (e.g., `YES`, `NO`, `INVALID`), and one side loses, 
 
 Optionally, a portion of the winning side's stake can also be burned to discourage griefing. For example, Augur V2 burns 10% of the deposit to impose a small cost on participation and limit risk-free trolling.
 
-> \[!INFO]
+> [!NOTE]
 >
 > #### Example Gameplay
 >
@@ -89,11 +89,7 @@ Optionally, a portion of the winning side's stake can also be burned to discoura
 >
 > 2. After 1 day, Alice sees the market and believes the correct outcome is `NO`. To dispute, she must stake more than 1 $REP$ on `NO`. She chooses to stake 3 $REP$.
 >
->    * This updates the attrition cost and increases the timer to approximately:
->
->    ```math
->    t = 7 \cdot \frac{\ln(3)}{\ln(10)} ≈ 3.34 \text{ weeks}
->    ```
+>	* This updates the attrition cost and increases the timer to approximately: $t = 7 \cdot \frac{\ln(3)}{\ln(10)} ≈ 3.34 \text{ weeks}$
 >
 > 3. No one disputes Alice’s `NO` stake over the next 6 days, so the battle ends with the outcome `NO`.
 >
