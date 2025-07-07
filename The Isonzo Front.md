@@ -79,7 +79,7 @@ When a battle ends:
 
 If three sides are involved (e.g., `YES`, `NO`, `INVALID`), and one side loses, the losing side’s funds are burned. This mechanism ensures that winners are always rewarded with a 2x return on their matched stake.
 
-Optionally, a portion of the winning side's stake can also be burned to discourage griefing. For example, Augur V2 burns 10% of the deposit to impose a small cost on participation and limit risk-free trolling.
+Optionally, a portion of the winning side's stake can also be burned to discourage griefing. For example, Augur V2 burns 20% of the deposit to impose a small cost on participation and limit risk-free trolling.
 
 > [!NOTE]
 >
