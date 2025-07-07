@@ -29,4 +29,6 @@ If you want to fiddle around with the parameters you can do so at [ipfs://bafybe
 ## Escalation Games
 [Fluid Escalation Game](/Fluid%20Escalation%20Game.md)
 
-[Combinatorial Escalation Game](/Combinatorial%20Escalation%20Game)
+[Combinatorial Escalation Game](/Combinatorial%20Escalation%20Game.md)
+
+[The Isonzo Front - Escalation Game](/The%20Isonzo%20Front.md)
