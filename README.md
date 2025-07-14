@@ -34,4 +34,5 @@ If you want to fiddle around with the parameters you can do so at [ipfs://bafybe
 [The Isonzo Front - Escalation Game](/The%20Isonzo%20Front.md)
 
 [Open Interest Fee Griefing](/Open%20Interest%20Fee%20Griefing.md)
+
 [Open Intereset Fee Griefing Fix](/Fix%20Open%20Interest%20Griefing%20in%20Escalation%20Games.md)
