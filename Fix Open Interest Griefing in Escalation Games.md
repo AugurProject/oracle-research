@@ -27,10 +27,10 @@ Here's all the requirements we prefer the $\text{investment}(t)$ and $\text{burn
 
 **Investment Conditions:**
 ```math
-\forall t \in [0, t_{\text{Max}}]],\quad \text{investment}(t) \geq 0
+\forall t \in [0, t_{\text{Max}}],\quad \text{investment}(t) \geq 0
 ```
 ```math
-\text{investment}(t_{\text{Max}}]) = \text{Fork Treshold} + \text{burn}(t_{\text{Max}}])
+\text{investment}(t_{\text{Max}}) = \text{Fork Treshold} + \text{burn}(t_{\text{Max}})
 ```
 
 **Monotonicity and Continuity:**
