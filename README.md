@@ -38,3 +38,5 @@ If you want to fiddle around with the parameters you can do so at [ipfs://bafybe
 [Open Intereset Fee Griefing Fix](/Fix%20Open%20Interest%20Griefing%20in%20Escalation%20Games.md)
 
 [Dual Escalation Game](/Dual%20Escalation%20Game.md)
+
+[Eth Escalation Games](/Eth%20Escalation%20Games.md)
