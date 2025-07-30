@@ -2,7 +2,9 @@
 
 PLACEHOLDER is a game theoretically secure decentralized prediction market and oracle service running on Ethereum. PLACEHOLDER is built on ideas from Augur V2, DEFI protocols on and other oracles.
 
-![image](images/SystemFlow.png)
+## Summary
+
+## Motivation
 
 ## PLACEHOLDER Security Assumption
 
@@ -24,9 +26,22 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 	- **Sufficient liquidity**: When selling big amount of assets, there might not be enough liquidity on the market and there's a lot slippage.
 	- **Open interest < REP's market cap**: If $REP$'s market cap is less than the REP being sold, it's not even possible to get equal worth in $ETH$ as not enough $REP$ exists for that.
 	- **REP needs to maintain its value**: After Open interest has been converted into $REP$, $REP$'s price might drop, causing users to lose value.
+8. It is assumed Traders hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market
+9. REP is liquid enough (access is needed to create security pools if existing holders do not), needed for dispute games too
+10. TWAP price oracle is hard enough to manipulate (TODO: research more)
 
 [TODO missing security pool assumptions]
 [TODO missing escalation game assmptions]
+
+## System Overview
+![image](images/SystemFlow.png)
+### Participants
+- REP Holders
+- OI holders
+- Security Pool holders
+- Keepers
+- Traders
+- Market Makers
 
 ## Creating Markets
 Anyone can create market on PLACEHOLDER. To create a market you need to
@@ -106,6 +121,8 @@ To address this, it is recommended that trading platforms implement some form of
 ## Reporting
 When market ends; current time is past **Market End Date**. The **Designated Reporter** can report on the market according to what actually happened in the real world. The designated reporter decides if the market resolves as Yes, No or Invalid. The Designated Reporter has **Designated Reporter Time** to do this. If they fail to do this, anyone can report on the market. This person or Designated reporter is called as **Initial Reporter**. There is no deadline for **Initial Reporter** to report on the market.
 
+[TODO: add designated reporter->initial reporter REP stake swapping option]
+
 ### Disputing
 If users disagree with the **Initial Reporter**, they are able to dispute the market by staking REP, this will start an [Escalation Game](Escalation%20Game.md). If the escalation game ends up as a timeout, the market finalizes at its outcome. After the market has finalized the Security Bond Debts of Security Pools are cleared for this market and traders can redeem their Yes, No or Invalid tokens to ETH depending on which outcome the market finalized on.
 
@@ -114,30 +131,23 @@ Users are able to participate Escalation Game by using REP they have or REP stak
 
 #### Escalation Game
 [TODO, should we handle the OI fees somehow(?), as we don't know what they are nowadays]
-A *Battle of Isonzo* represents a single escalation game within the system. Each battle concludes with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
 
-The battle begins when the designated reporter submits an initial `Start Deposit` in $REP$ tokens. This triggers a 1-week resolution timer. If no one disputes the market during this period, the outcome proposed by the reporter is finalized.
+Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake REP on each respective side. REP holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
 
-However, the battle can be escalated by any participant who deposits more than the current total on the leading outcome
+The game starts if someone stakes more than **Market Creator Bond** on a different outcome than Initial Reporter/Designated Reporer reported on before **Dispute Period Length** runs out. If this doesn't happen during the time period the outcome proposed by the reporter is finalized.
 
-Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a war of attrition: escalating the battle becomes increasingly expensive over time. The cost to participate grows exponentially, following this formula:
+If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a war of attrition: escalating the battle becomes increasingly expensive over time. The cost to participate grows exponentially, following this formula:
 
 ```math
-\text{Attrition Cost} = \text{Start Deposit} \cdot \left( \frac{\text{Fork Threshold}}{\text{Start Deposit}} \right)^{\frac{\text{Time Since Start}}{\text{Time Limit}}}
+\text{Attrition Cost} = \text{Market Creator Bond} \cdot \left( \frac{\text{Fork Threshold}}{\text{Market Creator Bond}} \right)^{\frac{\text{Time Since Start}}{\text{Escalation Game Time Limit}}}
 ```
 
-### Starting Parameters
-| Parameter      | Value   |
-| -------------- | ------- |
-| Start Deposit  | 1 REP   |
-| Fork Threshold | 10 REP  |
-| Time Limit     | 7 weeks |
-
+## Cost to Stay in game
 We get following cumulative cost to stay in the battle given each week:
-![image](images/war_of_attrition.png)
+![image](../images/war_of_attrition.png) (if $\text{Market Creator Bond} = 1$ REP, $\text{Fork Threshold} = 10$ REP $\text{Escalation Game Time Limit} = 7$ weeks)
 If, at any point in time, only one side has successfully paid the attrition cost, the battle ends and that outcome is finalized.
 
-Alternatively, the battle ends in a `FORK` if **two or more sides** each manage to deposit the full `Fork Threshold` amount. In this case, the market enters a fork, allowing the creation of separate universes. Notably, **it is not possible** to deposit more than the `Fork Threshold` on any single side.
+Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full `Fork Threshold` amount of REP. In this case, PLACEHOLDER forks, allowing the creation of separate universes. Notably, **it is not possible** to deposit more than the `Fork Threshold` on any single side.
 
 ### Solving for Resolution Timing
 
@@ -157,17 +167,13 @@ In other words, **it is not necessary to be part of the battle from the beginnin
 
 ### Rewards and Settlement
 When a battle ends:
-* The winning side receives twice the amount of their Binding Stake. The non-binding stake is returned as it is.
-* In the case of a `FORK`, each winning side in the forked universes is rewarded accordingly.
+* The winning side receives their contributed stake back and all the REP staked by the second most staked side.
+* In the case of a fork, each winning side in the forked universes is rewarded accordingly.
 * Losing sides lose all their invested capital
 
-**Binding Stake** refers to the amount of funds that were:
-* Deposited during the battle
-* Matched by at least one opposing side
+The winning side is rewarded in order of time of contribution to the game. All the Binding Stake and 20% pre-staked over (**Binding Stake** refers to the amount of funds that were, deposited during the battle and Matched by at least one opposing side), is rewarded all the losing sides REP minus 20%, which is burnt.
 
-If three sides are involved (e.g., `YES`, `NO`, `INVALID`), and one side loses, the losing side’s funds are burned. This mechanism ensures that winners are always rewarded with a 2x return on their matched stake.
-
-Optionally, a portion of the winning side's stake can also be burned to discourage griefing. For example, Augur V2 burns 20% of the deposit to impose a small cost on participation and limit risk-free trolling.
+If all three sides are involved in the battle (`YES`, `NO`, `INVALID`), and one side loses, the losing side’s funds are burned.
 
 > [!NOTE]
 >
@@ -181,11 +187,11 @@ Optionally, a portion of the winning side's stake can also be burned to discoura
 >
 > 3. No one disputes Alice’s `NO` stake over the next 6 days, so the battle ends with the outcome `NO`.
 >
-> 4. As the winner, Alice can claim 1 $REP$ from Bob (her opposing matched stake), resulting in a net gain of 1 $REP$.
+> 4. As the winner, Alice can claim 0.8 $REP$ from Bob (her opposing matched stake), and 0.2 $REP$ is burnt, resulting in a net gain of 1 $REP$.
 
 ## Capping the Capital
 
-The Battle of Isonzo still shares a core vulnerability with Augur V2:
+The Escalation game still shares a core vulnerability with Augur V2:
 An attacker can initiate multiple disputes across many markets simultaneously. Unless honest participants have enough capital to defend all of them, attackers can overwhelm the system.
 
 To address this, The Isonzo Front introduces a priority queue and a global capital cap.
@@ -351,13 +357,14 @@ After auction has completed succesfully,
 | Parameter      | Value   |
 | -------------- | ------- |
 | Open Interest Fee (yearly) | 50%  | 
-| Time Limit     | 7 weeks |
+| Escalation Game Time Limit     | 7 weeks |
 | Number Of Weeks In a Year     | 52 weeks |
 | Market Creator Bond | 0.4 REP | 
 | Fork Theshold | 2.5% of REP CAP | 
 | Security Multiplier | 2 | 
 | Fork Duration | 8 weeks |
 | Designated Reporter Time | 3 days | 
+| Dispute Period Length | 4 days | 
 | REP to ETH Auction Length | 1 week | 
 | Dutch Auction Divisor Range | 1 000 000 | 
 
