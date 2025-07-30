@@ -191,14 +191,14 @@ If all three sides are involved in the battle (`YES`, `NO`, `INVALID`), and one 
 
 ## Capping the Capital
 
-The Escalation game still shares a core vulnerability with Augur V2:
+A single Escalation Game still shares a core vulnerability with Augur V2:
 An attacker can initiate multiple disputes across many markets simultaneously. Unless honest participants have enough capital to defend all of them, attackers can overwhelm the system.
 
-To address this, The Isonzo Front introduces a priority queue and a global capital cap.
+To address this we introduce a priority queue and a global capital cap.
 
 ### Freeze Threshold
 
-Under normal conditions, The Isonzo Front behaves similarly to Augur V2 - multiple escalation games can run in parallel. However, once the total binding capital across all active battles exceeds a predefined Freeze Threshold, the system enters a special Freezing State.
+Under normal conditions, The Escalation Game behaves similarly to Augur V2 - multiple escalation games can run in parallel. However, once the total binding capital across all active battles exceeds a predefined Freeze Threshold, the system enters a special Freezing State.
 
 For example, the Freeze Threshold can be defined as:
 
@@ -285,7 +285,7 @@ This ensures:
 
 ## Summary of Benefits
 
-The Isonzo Front improves upon the Augur V2 escalation game with several key enhancements:
+The PLACEHOLDERs Escalition Game mproves upon the Augur V2 escalation game with several key enhancements:
 
 1. **Supports Prestaking**
    Participants can stake early to avoid stake sniping and signal more clearly on how much capital is ready to defend.
@@ -305,10 +305,8 @@ The Isonzo Front improves upon the Augur V2 escalation game with several key enh
 6. **Fairer Game Dynamics**
    The system ensures that the winning side only needs to lock slightly more capital than the losing side - promoting balance and fairness.
 
-Here's Solidity pseudo code for the The Isonzo Front: [contracts/TheIsonzoFront.sol](./contracts/TheIsonzoFront.sol).
-
 ## Fork
-If Escalation Game fails to find consensus on the outcome, PLACEHOLDER enters into a fork state, during forking state:
+If PLACEHOLDER's Escalation Game fails to find consensus on the outcome, PLACEHOLDER enters into a fork state, during forking state:
 1) No market can finalize
 2) No market can be created
 3) Escalation games freeze
@@ -328,7 +326,7 @@ All REP holders will have $\text{Fork Duration}$ amount of time to migrate their
 #### Security Pool Migration
 
 ### ETH Migration
-After the REP migration period ends ($\text{Fork Duration}$ period), complete sets can no longer be redeemed for ETHs. The system will look at how the REP is distributed across universes and migrate all ETH proportionately to the REP migration. If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the ETH would migrate to universe A, 50% of ETH would migrate to universe B, and 30% of ETH would remain behind.
+After the REP migration period ends ($\text{Fork Duration}$ period), complete sets can no longer be redeemed for ETH. Original REP token is frozen. The system will look at how the REP is distributed across universes and migrate all ETH proportionately to the REP migration. If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the ETH would migrate to universe A, 50% of ETH would migrate to universe B, and 30% of ETH would remain behind.
 
 This is game theoretically sound operation to make, as the REP migrating is more valuable than the migrating ETH, and the only way for the REP to maintain its value is to migrate into universe that maintains its value. REP holder can migrate into a false universe, to capture the ETH, but this makes the REP valueless. Here we are assuming that users prefer trading on an universe that reports truth and thus are willing to pay the oracle for this. And the fork does not have a significant negative impact on the systems value or traders willing to trade there.
 
@@ -348,25 +346,25 @@ If the auction fails to raise the necessary ETH then the CASH contract's redempt
 In the case of auction failure to raise enough ETH to cover traders before minting 1000x of migrated supply of REP, all auction participants will be refunded and the auction will be cancelled. The universe will shutdown except for withdraws of OI at a reduced price from their intended value.
 
 ## Market Migration
-After auction has completed succesfully,
+After auction has completed succesfully, markets migrate into all universes
 
 ## Invalid markets
+- should we adjust Market Creator Bond like augurv2 with invalid markets
+- should we punish market creator for making invalid market by burning the stake?
 
 # Parameters
 
-| Parameter      | Value   |
-| -------------- | ------- |
-| Open Interest Fee (yearly) | 50%  | 
-| Escalation Game Time Limit     | 7 weeks |
-| Number Of Weeks In a Year     | 52 weeks |
-| Market Creator Bond | 0.4 REP | 
-| Fork Theshold | 2.5% of REP CAP | 
-| Security Multiplier | 2 | 
-| Fork Duration | 8 weeks |
-| Designated Reporter Time | 3 days | 
-| Dispute Period Length | 4 days | 
-| REP to ETH Auction Length | 1 week | 
-| Dutch Auction Divisor Range | 1 000 000 | 
+| Parameter                       | Value              |
+| ------------------------------- | ------------------ |
+| Escalation Game Time Limit      | 7 weeks            |
+| Market Creator Bond             | 0.4 REP            |
+| Fork Theshold                   | 2.5% of REP Supply |
+| Security Multiplier             | 2                  |
+| Fork Duration                   | 8 weeks            |
+| Designated Reporter Time        | 3 days             |
+| Dispute Period Length           | 4 days             |
+| REP to ETH Auction Length       | 1 week             |
+| Dutch Auction Divisor Range     | 1 000 000          |
 
 # Open Questions
 - how to do liquidations?
