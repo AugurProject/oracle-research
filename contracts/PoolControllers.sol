@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity 0.8.30;
 
 struct RepDeposit {
 	uint256 rep;
@@ -8,27 +8,21 @@ struct RepDeposit {
 }
 
 // a custom pool where you can buy true complete sets from security pool with fixed fee
-contract ConstantPriceCustomSecurityPool { 
-	SecurityPool securityPool;
+contract OpenConstantPriceController is RepDepositAccountor { 
+	SecurityPool public securityPool;
 	uint256 public feePerTokenMinted; // fee rate (scaled by 1e18)
-	IERC20 public cashToken;
-	IERC20 public repToken;
 
-	mapping(address => RepDeposit) public repHolders;
-	uint256 public totalRepDeposits;
-	uint256 public globalFeePerRep; // scaled by 1e18
-
-	constructor(Oracle oracle, uint256 _feePerTokenMinted, IERC20 _cashToken, IERC20 _repToken) {
+	constructor(Oracle oracle, uint256 _feePerTokenMinted, IERC20 _cashToken, IERC20 _repToken) 
+		RepDepositAccountor(_repToken, _cashToken)
+	{
 		securityPool = oracle.deploySecurityPool(address(this));
 		feePerTokenMinted = _feePerTokenMinted;
-		cashToken = _cashToken;
-		repToken = _repToken;
 	}
 
 	// -------------------------
 	// BUY COMPLETE SETS WITH FEE
 	// -------------------------
-	function buyCompleteSets(uint256 amount) public {
+	function buyCompleteSets(Market market, uint256 amount) public {
 		uint256 fee = (amount * feePerTokenMinted) / 1e18;
 		uint256 totalCost = amount + fee;
 
@@ -40,63 +34,22 @@ contract ConstantPriceCustomSecurityPool {
 		IERC20 completeSet = market.completeSet();
 		completeSet.transfer(msg.sender, amount);
 
-		// Distribute fee to REP holders
-		_distributeFee(fee);
+		// Deposit collected fee into RepFeeManager
+		_depositFees(fee);
 	}
 
 	// -------------------------
-	// REP FEE ACCOUNTING
+	// REP DEPOSIT AND WITHDRAW
 	// -------------------------
 
-	function depositRep(uint256 amount) public {
-		require(amount > 0, "Amount must be > 0");
-		_updateUserFees(msg.sender);
-		repToken.transferFrom(msg.sender, address(this), amount);
+	function depositRep(uint256 amount) public override {
+		super.depositRep(amount);
 		securityPool.depositRep(amount);
-		repHolders[msg.sender].rep += amount;
-		totalRepDeposits += amount;
 	}
 
-	function withdrawRep(uint256 amount) public {
-		require(repHolders[msg.sender].rep >= amount, "Insufficient REP balance");
-		_updateUserFees(msg.sender);
-		repHolders[msg.sender].rep -= amount;
-		totalRepDeposits -= amount;
+	function withdrawRep(uint256 amount) public override {
+		super.withdrawRep(amount);
 		securityPool.withdrawRep(amount);
-		repToken.transfer(msg.sender, amount);
-		_claimUserFees(msg.sender);
-	}
-
-	function claimFees() public {
-		_updateUserFees(msg.sender);
-		_claimUserFees(msg.sender);
-	}
-
-	// -------------------------
-	// INTERNAL FEE LOGIC
-	// -------------------------
-
-	function _distributeFee(uint256 fee) internal {
-		if (fee > 0 && totalRepDeposits > 0) {
-			globalFeePerRep += (fee * 1e18) / totalRepDeposits;
-		}
-	}
-
-	function _updateUserFees(address user) internal {
-		RepDeposit storage deposit = repHolders[user];
-		if (deposit.rep > 0) {
-			uint256 accumulated = (deposit.rep * (globalFeePerRep - deposit.accumulator)) / 1e18;
-			deposit.pendingFees += accumulated;
-		}
-		deposit.accumulator = globalFeePerRep;
-	}
-
-	function _claimUserFees(address user) internal {
-		RepDeposit storage deposit = repHolders[user];
-		uint256 claimable = deposit.pendingFees;
-		require(claimable > 0, "No fees to claim");
-		deposit.pendingFees = 0;
-		cashToken.transfer(user, claimable);
 	}
 }
 
@@ -164,21 +117,19 @@ contract FeeCompleteSetToken is ERC20 {
 }
 
 // a custom pool where users are charged variable fee
-contract OpenVariableFeeCustomSecurityPool {
-	SecurityPool securityPool;
-	mapping(Market => FeeCompleteSetToken) feeCompleteSetTokens;
-	mapping(address => RepDeposit) repHolders;
-	IERC20 cashToken;
-	IERC20 repToken;
+contract OpenVariableFeeController is RepDepositAccountor {
+	SecurityPool public securityPool;
+	mapping(Market => FeeCompleteSetToken) public feeCompleteSetTokens;
 
-	uint256 public totalRepDeposits;
-	uint256 public globalFeePerRep; // scaled by 1e18 for precision
-
-	constructor(Oracle oracle, IERC20 _repToken, IERC20 _cashToken) {
-		this.securityPool = oracle.deploySecurityPool(address(this));
-		repToken = _repToken;
-		cashToken = _cashToken;
+	constructor(Oracle oracle, IERC20 _repToken, IERC20 _cashToken)
+		RepDepositAccountor(_repToken, _cashToken)
+	{
+		securityPool = oracle.deploySecurityPool(address(this));
 	}
+
+	// -------------------------
+	// MARKET FEE MANAGEMENT
+	// -------------------------
 
 	function addMarket(Market market) public {
 		feeCompleteSetTokens[market] = new FeeCompleteSetToken(market.completeSet(), address(this));
@@ -190,52 +141,21 @@ contract OpenVariableFeeCustomSecurityPool {
 	}
 
 	// -------------------------
-	// REP DEPOSIT & FEE TRACKING
+	// REP DEPOSIT & WITHDRAW
 	// -------------------------
 
-	function depositRep(uint256 amount) public {
-		require(amount > 0, "Amount must be > 0");
-		_updateUserFees(msg.sender);
-		repToken.transferFrom(msg.sender, address(this), amount);
-		repHolders[msg.sender].rep += amount;
+	function depositRep(uint256 amount) public override {
+		super.depositRep(amount);
 		securityPool.depositRep(amount);
-		totalRepDeposits += amount;
 	}
 
-	function withdrawRep(uint256 amount) public {
-		require(repHolders[msg.sender].rep >= amount, "Insufficient deposited REP");
-		_updateUserFees(msg.sender);
-		repHolders[msg.sender].rep -= amount;
-		totalRepDeposits -= amount;
+	function withdrawRep(uint256 amount) public override {
+		super.withdrawRep(amount);
 		securityPool.withdrawRep(amount);
-		repToken.transfer(msg.sender, amount);
-		_claimUserFees(msg.sender);
-	}
-
-	function claimFees() public {
-		_updateUserFees(msg.sender);
-		_claimUserFees(msg.sender);
-	}
-
-	function _updateUserFees(address user) internal {
-		RepDeposit storage deposit = repHolders[user];
-		if (deposit.rep > 0) {
-			uint256 accumulated = (deposit.rep * (globalFeePerRep - deposit.accumulator)) / 1e18;
-			deposit.pendingFees += accumulated;
-		}
-		deposit.accumulator = globalFeePerRep;
-	}
-
-	function _claimUserFees(address user) internal {
-		RepDeposit storage deposit = repHolders[user];
-		uint256 claimable = deposit.pendingFees;
-		require(claimable > 0, "No fees to claim");
-		deposit.pendingFees = 0;
-		cashToken.transfer(user, claimable);
 	}
 
 	// -------------------------
-	// FEE COLLECTION FROM MARKETS
+	// FEE COLLECTION & DISTRIBUTION
 	// -------------------------
 
 	function collectMarketFees(Market market) public {
@@ -243,8 +163,8 @@ contract OpenVariableFeeCustomSecurityPool {
 		feeCompleteSetTokens[market].claimFees();
 		uint256 feesCollected = cashToken.balanceOf(address(this)) - feesBefore;
 
-		if (feesCollected > 0 && totalRepDeposits > 0) {
-			globalFeePerRep += (feesCollected * 1e18) / totalRepDeposits;
+		if (feesCollected > 0) {
+			_depositFees(feesCollected); // use accumulator logic from RepFeeManager
 		}
 	}
 
