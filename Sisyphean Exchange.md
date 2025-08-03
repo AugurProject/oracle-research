@@ -50,8 +50,6 @@ On each universe, a dutch auction is held where people are bidding ETH in exchan
 
 If the auction fails to raise the necessary ETH (B), then the CASH contract's redemption price will be adjusted accordingly.  If the auction succeeds at raising enough ETH (A) then the CASH contract's redemption price will remain at its pre-fork value.
 
-In the case of a failed auction (failure to raise enough ETH to cover traders before minting 1000x of migrated supply of REP), all auction participants will be refunded and the auction will be cancelled.  The universe will shutdown except for withdraws of OI at a reduced price from their intended value.
-
 <details>
 <summary>$${\color{BurntOrange}{\textsf{Other auctions may work here.}}}$$</summary>
 The main requirement of the auction is that it sells minted REP for ETH and raises as much ETH as possible (up to the needed amount to make CASH contract whole) while minting as little REP as possible.  Other useful properties include:
