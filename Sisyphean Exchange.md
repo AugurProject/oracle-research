@@ -41,7 +41,7 @@ Once the escalation game has reached its stalemate state, all REP holders will h
 * Migration Time Limit: 8 weeks
 
 ## $${\color{ProcessBlue}{\textsf{CASH Migration}}}$$
-After the REP migration period ends, the system will look at how the REP is distributed across universes and migrate all CASH proportionately to the REP migration.  If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the CASH would migrate to universe A, 50% of CASH would migrate to universe B, and 30% of CASH would remain behind.
+After the REP migration period ends, the system will look at how the REP is distributed across universes and migrate all ETH in the pre-fork CASH contract proportionately to the REP migration.  If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the ETH would migrate to universe A CASH contract, 50% of ETH would migrate to universe B CASH contract, and 30% of ETH would remain behind in the pre-fork CASH contract.
 
 The CASH that remains behind is distributed to REP holders who failed to migrate.  The REP becomes worthless at this point and serves no purpose other than to redeem for CASH.  Transfers remain enabled so people can withdraw REP from exchanges and other contracts in order to redeem for CASH, but it no longer serves any purpose within the system.
 
