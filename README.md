@@ -43,3 +43,6 @@ If you want to fiddle around with the parameters you can do so at [ipfs://bafybe
 
 ## Fees
 [Feeless Oracle - Collateralized Debt Positions](/Feeless%20Oracle.md)
+
+## Liquidation
+[Thousand Needles - A Mass Bleed Liquidator](/Thousand%20Needles.md)
