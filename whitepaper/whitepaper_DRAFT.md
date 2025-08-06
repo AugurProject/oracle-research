@@ -11,7 +11,7 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 1. **Users are greedy**: Users value more money over less money.
 2. **A fork doesn't change the total value of the system**. Market cap of a previous universe equals ATLEAST market cap of the formed universes: 
 ```math
-\text{value of assets prior fork }= \sum_{\text{future universes}}{\text{value of assets}_{universe}}
+\text{value of assets prior fork}= \sum_{\text{future universes}}{\text{value of assets}_{universe}}
 ```
 3. **Users value honest universe(s)**: User prefers to use an universe that is honest in their opinion:
 ```math
@@ -21,26 +21,28 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 5. **Access to information**: Users should have reliable and timely access to information in order to determine the most truthful outcome of a market.
 6. **Migrating is not too hard**: Users, exchanges and other tools using the systems are okay to migrate into fork they believe is truthful.
 
-7. **Some amount of truthfull REP can be sold for ETH lost in a fork**:
-	- **Zero trading fees**: When selling assets on open market to $REP$, you often have to pay trading fees, and which results in the assets to be worth less than their original value.
-	- **Sufficient liquidity**: When selling big amount of assets, there might not be enough liquidity on the market and there's a lot slippage.
-	- **Open interest < REP's market cap**: If $REP$'s market cap is less than the REP being sold, it's not even possible to get equal worth in $ETH$ as not enough $REP$ exists for that.
-	- **REP needs to maintain its value**: After Open interest has been converted into $REP$, $REP$'s price might drop, causing users to lose value.
+7. Some amount of truthfull REP can be sold for ETH lost in a fork for a small enough fee:
 8. It is assumed Traders hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market
 9. REP is liquid enough (access is needed to create security pools if existing holders do not), needed for dispute games too
 10. TWAP price oracle is hard enough to manipulate (TODO: research more)
+11. The system is able to maintain inequality: Open interest < REP's market cap
+12. Assumption: People find value in being able to use a betting platform.
+13. Assumption: People are willing to pay some amount of money for rights to use a betting platform for some amount of time.
+14. Requirement (security): People need to be willing to pay more in fees to rent access to using Augur than 2x the Time Value of Money for the duration of their bet.
+15. we need enough users in the platfom for  (not necessary true as the system can be revived later too)
 
 [TODO missing security pool assumptions]
 [TODO missing escalation game assmptions]
+[TODO go throught these again and see which are really assumptions and which can be deriverd]
 
 ## System Overview
 ![image](images/SystemFlow.png)
 ### Participants
 - REP Holders
 - OI holders
+- Traders (yes,no,invalid holders)
 - Security Pool holders
 - Keepers
-- Traders
 - Market Makers
 
 ## Creating Markets
@@ -95,6 +97,22 @@ If a Security Pool becomes undercollateralized (underwater), it begins burning i
 4. Waiting for the market associated with the minted Complete Sets to finalize, after which those sets are no longer counted as outstanding
 
 [TODO: add parameters and describe this better]
+[TODO: the burn rate could depend on how much underwater the whole protocol is. Similar to how ethereum punishes validators if many are offline ]
+- hmm, its actually good that we do burning REP liquidation, as underwater security pools are risk for all the REP holders, so its correct that we reward all the other REP holders except the pool owner for that
+liquidating protocol: [Thousand Needles](../Thousand%20Needles.md)
+
+
+- hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
+
+- hmm, actually if we allow up to 50% of REP of Security Pools rep to be used in escalation game, it can be pulled from the security pool and still the debt has to below the REP value there. But will liquidate it anyway as its below security patameter, but the protocol is still somewhat safe. This can be lowred to 25% if we want to be safer
+
+- security pools can split into new pools by moving the debt and rep to other pool while still maintaining the requirements
+- splitting pools is actually quite interesting operation. You could have an open pool, which is at its limits, and you notice its managed quite badly. You can then choose to take your rep out, but you cannot as its at debt limit. So you can choose to take your share of debt out with your rep. Now you can for example add REP to it and start managing it yourself
+
+- Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
+
+- As we'll add that total debt ceiling on protocol level. We could also utilize it so that we allow pools to remove their debt when the market ends, but we keep it in the protocol debt until the market finalizes. This way we move the escalation game and fork delay debt problems to the protocol (all rep holders) instead of to a single pool. one issue with that is that the debt in escalation game is not paying any fees
+	-> actually we can put the delayers paying the fees of that as burning REP
 
 ### Security Pools Controllers
 While some functionalities within Security Pools (such as triggering liquidation) can be performed by anyone, the majority of operations are restricted to their controllers. Contoller can be a normal Ethereum address, or it can be a smart contract. Controllers define mechanisms for how complete sets can be minted.
@@ -141,6 +159,9 @@ If the market is disputed, the battle becomes active. Once a battle is active, a
 ```math
 \text{Attrition Cost} = \text{Market Creator Bond} \cdot \left( \frac{\text{Fork Threshold}}{\text{Market Creator Bond}} \right)^{\frac{\text{Time Since Start}}{\text{Escalation Game Time Limit}}}
 ```
+
+[todo: we probably want to use the attrition cost from dual escalation game (steeper start that depends on the escalated markets OI)]
+[todo: add a mechanism to control how steep the curve is at start depending on how much games are often escalated, weighted by the markets OI and time]
 
 ## Cost to Stay in game
 We get following cumulative cost to stay in the battle given each week:
@@ -313,6 +334,7 @@ If PLACEHOLDER's Escalation Game fails to find consensus on the outcome, PLACEHO
 4) No new escalation games can be created
 5) No complete sets can be created anymore
 6) Complete sets can be redeemed for ETHs before **ETH Migration** is triggered
+7) Security Pool Liquidations and REP withdrawals are disabled
 
 When fork is triggered, PLACEHOLDER splits into yes/no/invalid universes, these are called child universes, the current universe is called parent universe from perspective of child universes. 
 
@@ -324,6 +346,8 @@ The fork state lasts $\text{Fork Duration}$.
 All REP holders will have $\text{Fork Duration}$ amount of time to migrate their REP to one of the child universes. Any REP that participated in the escalation game that triggered the fork automatically migrates to the universe it was staked on. The REP in other escalation games is released and the owner of it can choose any child universe it belongs into. Exception to this is the REP staked as **Market Creator Bond** which gets migrated into all universes.
 
 #### Security Pool Migration
+- REP inside security pools migrate into fork of the security pool. So if its locked inside the pool it continues to be locked in the future pool
+- We need to freeze liquidations over this time
 
 ### ETH Migration
 After the REP migration period ends ($\text{Fork Duration}$ period), complete sets can no longer be redeemed for ETH. Original REP token is frozen. The system will look at how the REP is distributed across universes and migrate all ETH proportionately to the REP migration. If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the ETH would migrate to universe A, 50% of ETH would migrate to universe B, and 30% of ETH would remain behind.
@@ -332,7 +356,7 @@ This is game theoretically sound operation to make, as the REP migrating is more
 
 The ETH that remains behind is distributed to REP holders who failed to migrate. The REP becomes worthless at this point and serves no purpose other than to redeem for ETH. Transfers remain enabled so people can withdraw REP from exchanges and other contracts in order to redeem for ETH, but it no longer serves any purpose within the system.
 
-## CASH for REP Auction
+## ETH for REP Auction
 On each universe, a dutch auction is started right after when ETH migration is finalized. In the auction, people are bidding ETH in exchange for REP of the given universe. The auction starts by offering $\frac{\text{REP Supply}}{\text{Dutch Auction Divisor Range}}$ REP for the needed amount of ETH and the amount of REP offered increases every second until it reaches $\text{REP Supply}\cdot \text{Dutch Auction Divisor Range}$ REP offered. The auction ends when either (A) one or more parties combined are willing to buy the ETH deficit for the current REP price or (B) it reaches the end without enough ETH willing to buy even at the final price. The final prize is reached when the auction has lasted $\text{REP to ETH Auction Length}$.
 
 The auction participants are also able to submit non-cancelable limit orders to the auction "I am willing to buy 100 REP with price of 10 ETH", these limit orders can be submited right after the system has entered into a fork state, even thought the auction itself has not yet started.
@@ -357,7 +381,7 @@ After auction has completed succesfully, markets migrate into all universes
 | Parameter                       | Value              |
 | ------------------------------- | ------------------ |
 | Escalation Game Time Limit      | 7 weeks            |
-| Market Creator Bond             | 0.4 REP            |
+| Market Creator Bond             | 1 REP              |
 | Fork Theshold                   | 2.5% of REP Supply |
 | Security Multiplier             | 2                  |
 | Fork Duration                   | 8 weeks            |
@@ -374,8 +398,10 @@ After auction has completed succesfully, markets migrate into all universes
 
 # Vocabulary
 
-Token = 
-REP = 
-ETH = 
-FORK =
-Minting Tokens = Minting means creating tokens out of nowhere.
+| Term                       | Description              |
+| ------------------------------- | ------------------ |
+| Token | |
+| REP | |
+| ETH | |
+| FORK | |
+| Minting Tokens | Minting means creating tokens out of nowhere. |
