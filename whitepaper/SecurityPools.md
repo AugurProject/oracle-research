@@ -58,4 +58,8 @@ Possible monetization strategies include:
 
 Enabling REP holders to earn revenue is crucial because the security of the system depends on maintaining the inequality ($\text{REP Market Cap} > \text{Open Interest}$). Since the system imposes no fees itself, it is up to REP holders to develop effective methods for monetizing access to complete sets.
 
-### Reporting via Security Pool
+REP holders participating in Security Pools managed by others should exercise caution. Depositing REP into a poorly managed pool can lead to loss of funds and give malicious actors the ability to misuse that REP to attack PLACEHOLDER.
+
+### Good practices for Open Security Pools
+- REP holders should be able to fork of the pool by taking their share of the open interest with them into new pool to exit the pool
+- REP holders should be allowed to use their share of voting power for Escalation Game

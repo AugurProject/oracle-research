@@ -95,14 +95,15 @@ A Security Pool allows only up to 50% of its REP being used in an escalation gam
 ## Fork
 If PLACEHOLDER's Escalation Game fails to find consensus on the outcome, PLACEHOLDER enters into a fork state, during forking state:
 1) No market can finalize
-2) No market can be created
+2) No market can be created on parent universe (allowed for child)
 3) Escalation games freeze
 4) No new escalation games can be created
 5) No complete sets can be created anymore
 6) Complete sets can be redeemed for ETHs before **ETH Migration** is triggered
-7) Security Pool Liquidations and REP withdrawals are disabled
+7) Security Pool Security Bond Minting, Liquidations, REP withdrawals and REP Deposits are disabled
+8) Security Pools of child universe can mint Security Bonds, do REP withdrawals and deposits, but cannot be liquidated.
 
-When fork is triggered, PLACEHOLDER splits into yes/no/invalid universes, these are called child universes, the current universe is called parent universe from perspective of child universes. 
+When fork is triggered, PLACEHOLDER splits into yes/no/invalid universes, these are called child universes, the current universe is called parent universe from perspective of child universes. Child universes have all the non-finalized parent markets migrated over.
 
 Universe is a system that holds it's own Reputation token, it's own markets, its own market shares and such. Different universes are independent of each other.
 
@@ -112,8 +113,9 @@ The fork state lasts $\text{Fork Duration}$.
 All REP holders will have $\text{Fork Duration}$ amount of time to migrate their REP to one of the child universes. Any REP that participated in the escalation game that triggered the fork automatically migrates to the universe it was staked on. The REP in other escalation games is released and the owner of it can choose any child universe it belongs into. Exception to this is the REP staked as **Market Creator Bond** which gets migrated into all universes.
 
 #### Security Pool Migration
-- REP inside security pools migrate into fork of the security pool. So if its locked inside the pool it continues to be locked in the future pool
-- We need to freeze liquidations over this time
+When PLACEHOLDER forks, the security pools fork as well. The Security Pool Controller must decide how much REP to migrate into each forked branch. The Controller can allocate REP to multiple branches, which is especially useful when managing REP for multiple users rather than a single account.
+
+During a fork, security bonds in the Security Pool are duplicated and minted in all universes. As a result, a healthy Security Pool can still face liquidation, since the number of Security Bonds remains constant while some of its REP is migrated to other universes.
 
 ### ETH Migration
 After the REP migration period ends ($\text{Fork Duration}$ period), complete sets can no longer be redeemed for ETH. Original REP token is frozen. The system will look at how the REP is distributed across universes and migrate all ETH proportionately to the REP migration. If 20% of REP migrated to universe A, 50% migrated to universe B, and 30% failed to migrate within the window then 20% of the ETH would migrate to universe A, 50% of ETH would migrate to universe B, and 30% of ETH would remain behind.
@@ -135,9 +137,6 @@ If the auction fails to raise the necessary ETH then the CASH contract's redempt
 
 In the case of auction failure to raise enough ETH to cover traders before minting 1000x of migrated supply of REP, all auction participants will be refunded and the auction will be cancelled. The universe will shutdown except for withdraws of OI at a reduced price from their intended value.
 
-## Market Migration
-After auction has completed succesfully, markets migrate into all universes
-
 ## Invalid markets
 - should we adjust Market Creator Bond like augurv2 with invalid markets
 - should we punish market creator for making invalid market by burning the stake?
@@ -157,7 +156,6 @@ After auction has completed succesfully, markets migrate into all universes
 | Dutch Auction Divisor Range     | 1 000 000          |
 
 # Open Questions
-- how to do liquidations?
 - how to fund TWAP
 - how to maintain TWAP security?
 - Should we have turnstile?
@@ -182,9 +180,4 @@ After auction has completed succesfully, markets migrate into all universes
 - todo add analysis on price oracle, how PLACEHOLDER adds liquidity into the pool
 - hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
 
-- splitting pools is actually quite interesting operation. You could have an open pool, which is at its limits, and you notice its managed quite badly. You can then choose to take your rep out, but you cannot as its at debt limit. So you can choose to take your share of debt out with your rep. Now you can for example add REP to it and start managing it yourself
-
 - Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
-
-- As we'll add that total debt ceiling on protocol level. We could also utilize it so that we allow pools to remove their debt when the market ends, but we keep it in the protocol debt until the market finalizes. This way we move the escalation game and fork delay debt problems to the protocol (all rep holders) instead of to a single pool. one issue with that is that the debt in escalation game is not paying any fees
-	-> actually we can put the delayers paying the fees of that as burning REP
