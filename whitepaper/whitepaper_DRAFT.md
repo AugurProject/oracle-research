@@ -26,10 +26,10 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 9. REP is liquid enough (access is needed to create security pools if existing holders do not), needed for dispute games too
 10. TWAP price oracle is hard enough to manipulate (TODO: research more)
 11. The system is able to maintain inequality: Open interest < REP's market cap
-12. Assumption: People find value in being able to use a betting platform.
-13. Assumption: People are willing to pay some amount of money for rights to use a betting platform for some amount of time.
+12. People find value in being able to use a betting platform.
+13. People are willing to pay some amount of money for rights to use a betting platform for some amount of time.
 14. Requirement (security): People need to be willing to pay more in fees to rent access to using Augur than 2x the Time Value of Money for the duration of their bet.
-15. we need enough users in the platfom for  (not necessary true as the system can be revived later too)
+15. We need enough users in the platfom for (not necessary true as the system can be revived later too)
 
 [TODO missing security pool assumptions]
 [TODO missing escalation game assmptions]
@@ -37,95 +37,36 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 
 ## System Overview
 ![image](images/SystemFlow.png)
-### Participants
+### System Participants
 - REP Holders
 - OI holders
 - Traders (yes,no,invalid holders)
 - Security Pool holders
 - Keepers
 - Market Makers
+- REP/ETH traders
 
-## Creating Markets
-Anyone can create market on PLACEHOLDER. To create a market you need to
+## Creating Prediction Markets
+Anyone can create a prediction market on PLACEHOLDER. To create a market you need to
 1) Write up a **Market Description**
 2) Decide what is **Market End Date**
 3) Decide who is **Designated Reporter**
-4) Deposit $\text{Market Creator Bond}$ worth of $REP$ to the system.
+4) Deposit **Market Creator Bond** worth of $REP$ to the system.
 
-The created market needs to obey [Reporting Rules](./Reporting%20Rules.md) to be considered to be a valid market. Invalid markets will resolve into Invalid outcome. PLACEHOLDER only has markets that resolve into one of three outcomes: YES, No or Invalid.
+The created market needs to obey [Reporting Rules](./Reporting%20Rules.md) to be considered to be a valid market. Markets not obeying the rules are considered Invalid, which is one reporting option. PLACEHOLDER only has markets that resolve into one of three outcomes: YES, No or Invalid. Given PLACEHOLDER's assumptions, the users of the market can expect the market to resolve correctly according to a real world event outcome.
 
 ## Minting Market Shares
 
-To trade on a market in PLACEHOLDER, a user must first mint Complete Sets. A Complete Set is a bundle of tokens composed of equal amounts of Yes, No, and Invalid shares, and is specific to a single market (each market has its own Complete Sets).
+To trade on a market in PLACEHOLDER, the user must first mint Complete Sets. A Complete Set is a bundle of tokens composed of equal amounts of Yes, No, and Invalid shares, and is specific to a single market (each market has its own Complete Sets).
 
-There are multiple ways to access Complete Sets in PLACEHOLDER, E.g,
+There are multiple ways to access Complete Sets in PLACEHOLDER, such as,
 
 1) Create a personal Security Pool that mints Complete Sets using ETH and REP
 2) Purchase Complete Sets directly from other traders on the market
-3) Buy Complete Sets from an Open Security Pool using ETH
+3) Buy Complete Sets from an Open Security Pool
 4) Contripute REP to some Open Security Pool that grants it's members to mint complete sets
 
-### Security Pools
-
-![image](images/SecurityPool.png)
-
-Security Pools are somewhat similar to MakerDAO's Collateralized Debt Positions. In Maker, one needs to deposit ETH and you can borrow DAI against the ETH. In PLACEHOLDER, one deposits REP and one can create Security Bonds against REP. Security Bonds allow an user to deposit 1 ETH for each security bond to the PLACEHOLDER and mint one Complete Set against every pair of eth and security bond. Similar to Maker, In PLACEHOLDER, keepers keep track of the CDP/Security pools, that they have not too much debt that they cannot handle. In PLACEHOLDER, this requirement is:
-
-```math
-\text{Minted Complete Sets} \leq \frac{\text{Security Deposit(REP)} }{\text{Security Multiplier} \cdot \text{TWAP}_{REP/ETH}}
-```
-
-Here $\text{TWAP}_{REP/ETH}$ is a 1 hour Time-Weighted Average Price oracle, from Uniswap V3.
-
-PLACEHOLDER never allows user to create Complete Sets if this inequality does not hold. However, it can get broken if the value of ETH grows against ETH. In this case Keeper can liquidate the pool.
-
-Creating your own security pool with your own REP, allows you to utilize PLACEHOLDER with only cost of capital lockup.
-
-![image](images/CompleteSet.png)
-
-### Security Bonds
-When Security Pools mint Complete Sets, they generate debt in terms of Security Bonds. Each complete set needs to be backed by 1 ETH and by 1 Security Bond. This Security Bond debt can be cleared by two means:
-1) Returning Complete Set (These do not need to be the exact same Complete Sets minted by the Security Pool, but also ones minted by other Security Pools are ok) back to the pool
-2) The market the security bond is for is finalized, and the debt gets cleared immediadely
-
-### Liquidating Security Pool
-If a Security Pool becomes undercollateralized (underwater), it begins burning its **Security Deposit** at an exponential decay rate. This liquidation process can be stopped or avoided by:
-
-1. Depositing additional REP into the pool
-2. Returning (depositing) Complete Sets back into the Security Pool
-3. Waiting for the market price to recover
-4. Waiting for the market associated with the minted Complete Sets to finalize, after which those sets are no longer counted as outstanding
-
-[TODO: add parameters and describe this better]
-[TODO: the burn rate could depend on how much underwater the whole protocol is. Similar to how ethereum punishes validators if many are offline ]
-- hmm, its actually good that we do burning REP liquidation, as underwater security pools are risk for all the REP holders, so its correct that we reward all the other REP holders except the pool owner for that
-liquidating protocol: [Thousand Needles](../Thousand%20Needles.md)
-
-
-- hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
-
-- hmm, actually if we allow up to 50% of REP of Security Pools rep to be used in escalation game, it can be pulled from the security pool and still the debt has to below the REP value there. But will liquidate it anyway as its below security patameter, but the protocol is still somewhat safe. This can be lowred to 25% if we want to be safer
-
-- security pools can split into new pools by moving the debt and rep to other pool while still maintaining the requirements
-- splitting pools is actually quite interesting operation. You could have an open pool, which is at its limits, and you notice its managed quite badly. You can then choose to take your rep out, but you cannot as its at debt limit. So you can choose to take your share of debt out with your rep. Now you can for example add REP to it and start managing it yourself
-
-- Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
-
-- As we'll add that total debt ceiling on protocol level. We could also utilize it so that we allow pools to remove their debt when the market ends, but we keep it in the protocol debt until the market finalizes. This way we move the escalation game and fork delay debt problems to the protocol (all rep holders) instead of to a single pool. one issue with that is that the debt in escalation game is not paying any fees
-	-> actually we can put the delayers paying the fees of that as burning REP
-
-### Security Pools Controllers
-While some functionalities within Security Pools (such as triggering liquidation) can be performed by anyone, the majority of operations are restricted to their controllers. Contoller can be a normal Ethereum address, or it can be a smart contract. Controllers define mechanisms for how complete sets can be minted.
-
-The system itself has no internal fees, but controllers provide a way for REP holders to generate revenue. REP holders are the only participants permissioned to mint complete sets through Security Pools. This exclusivity enables REP holders to monetize access to complete sets.
-
-Possible monetization strategies include:
-
-1. Selling complete sets directly to anyone, with pricing based on factors like market duration
-2. Selling complete sets while also buying them back to mint new ones and maintain liquidity
-3. Issuing wrapped complete sets with a time-based fee instead of distributing them directly
-
-Enabling REP holders to earn revenue is critical because the security of the system depends on maintaining a sufficiently high REP market cap (explained later). Since the system itself does not impose fees, it is up to REP holders to design effective strategies for monetizing access to complete sets.
+### [Security Pools](./SecurityPools.md)
 
 ## Trading
 Once a user acquires a Complete Set for a market, they can sell parts of it to take a position. For example, selling all No shares from a Complete Set effectively places the user in a Yes position. If the market resolves to Yes, the user can redeem their Yes shares for 1 ETH each and keep the profit from having sold the No shares.
@@ -145,186 +86,11 @@ When market ends; current time is past **Market End Date**. The **Designated Rep
 If users disagree with the **Initial Reporter**, they are able to dispute the market by staking REP, this will start an [Escalation Game](Escalation%20Game.md). If the escalation game ends up as a timeout, the market finalizes at its outcome. After the market has finalized the Security Bond Debts of Security Pools are cleared for this market and traders can redeem their Yes, No or Invalid tokens to ETH depending on which outcome the market finalized on.
 
 #### Disputing via Security Pool
-Users are able to participate Escalation Game by using REP they have or REP staked to a Security Pool. Participating the game with a Security Pool does not remove the REP from the Pool right away. However, if the REP staked by this way gets lost in the escalation game, it gets pulled out from the Security Pool and given the winner of the game.
+Users are able to participate Escalation Game by using REP they have or REP staked to a Security Pool. Participating the game with a Security Pool does not remove the REP from the Pool. However, if the REP staked by this way gets lost in the escalation game, it gets pulled out from the Security Pool and given the winner of the game. 
 
-#### Escalation Game
-[TODO, should we handle the OI fees somehow(?), as we don't know what they are nowadays]
+A Security Pool allows only up to 50% of its REP being used in an escalation game. This is to prevent too much Open Interest being non-accounted by some Security Pool.
 
-Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake REP on each respective side. REP holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
-
-The game starts if someone stakes more than **Market Creator Bond** on a different outcome than Initial Reporter/Designated Reporer reported on before **Dispute Period Length** runs out. If this doesn't happen during the time period the outcome proposed by the reporter is finalized.
-
-If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a war of attrition: escalating the battle becomes increasingly expensive over time. The cost to participate grows exponentially, following this formula:
-
-```math
-\text{Attrition Cost} = \text{Market Creator Bond} \cdot \left( \frac{\text{Fork Threshold}}{\text{Market Creator Bond}} \right)^{\frac{\text{Time Since Start}}{\text{Escalation Game Time Limit}}}
-```
-
-[todo: we probably want to use the attrition cost from dual escalation game (steeper start that depends on the escalated markets OI)]
-[todo: add a mechanism to control how steep the curve is at start depending on how much games are often escalated, weighted by the markets OI and time]
-
-## Cost to Stay in game
-We get following cumulative cost to stay in the battle given each week:
-![image](../images/war_of_attrition.png) (if $\text{Market Creator Bond} = 1$ REP, $\text{Fork Threshold} = 10$ REP $\text{Escalation Game Time Limit} = 7$ weeks)
-If, at any point in time, only one side has successfully paid the attrition cost, the battle ends and that outcome is finalized.
-
-Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full `Fork Threshold` amount of REP. In this case, PLACEHOLDER forks, allowing the creation of separate universes. Notably, **it is not possible** to deposit more than the `Fork Threshold` on any single side.
-
-### Solving for Resolution Timing
-
-To estimate how much capital is required to push a resolution by a specific time, we can solve for `Time Since Start` in the attrition cost equation. This helps participants plan their capital commitments strategically:
-
-```math
-\boxed{
-\text{Time Since Start} = \text{Time Limit} \cdot \frac{\ln \left( \frac{\text{Attrition Cost}}{\text{Start Deposit}} \right)}{\ln \left( \frac{\text{Fork Threshold}}{\text{Start Deposit}} \right)}
-}
-```
-
-### Late Entry into a Battle
-
-An interesting feature of the system is that participants can join an ongoing battle at any time. For example, if `YES` and `NO` are actively competing, the `INVALID` side can still enter later by depositing the required attrition cost at that point in time.
-
-In other words, **it is not necessary to be part of the battle from the beginning** - but joining later requires paying the full cumulative cost up to that moment.
-
-### Rewards and Settlement
-When a battle ends:
-* The winning side receives their contributed stake back and all the REP staked by the second most staked side.
-* In the case of a fork, each winning side in the forked universes is rewarded accordingly.
-* Losing sides lose all their invested capital
-
-The winning side is rewarded in order of time of contribution to the game. All the Binding Stake and 20% pre-staked over (**Binding Stake** refers to the amount of funds that were, deposited during the battle and Matched by at least one opposing side), is rewarded all the losing sides REP minus 20%, which is burnt.
-
-If all three sides are involved in the battle (`YES`, `NO`, `INVALID`), and one side loses, the losing side’s funds are burned.
-
-> [!NOTE]
->
-> #### Example Gameplay
->
-> 1. Bob reports a market outcome as `YES` and stakes 1 $REP$ as the starting deposit. This initiates the game, and the market is set to resolve in 1 week if undisputed.
->
-> 2. After 1 day, Alice sees the market and believes the correct outcome is `NO`. To dispute, she must stake more than 1 $REP$ on `NO`. She chooses to stake 3 $REP$.
->
->	* This updates the attrition cost and increases the timer to approximately: $t = 7 \cdot \frac{\ln(3)}{\ln(10)} ≈ 3.34 \text{ weeks}$
->
-> 3. No one disputes Alice’s `NO` stake over the next 6 days, so the battle ends with the outcome `NO`.
->
-> 4. As the winner, Alice can claim 0.8 $REP$ from Bob (her opposing matched stake), and 0.2 $REP$ is burnt, resulting in a net gain of 1 $REP$.
-
-## Capping the Capital
-
-A single Escalation Game still shares a core vulnerability with Augur V2:
-An attacker can initiate multiple disputes across many markets simultaneously. Unless honest participants have enough capital to defend all of them, attackers can overwhelm the system.
-
-To address this we introduce a priority queue and a global capital cap.
-
-### Freeze Threshold
-
-Under normal conditions, The Escalation Game behaves similarly to Augur V2 - multiple escalation games can run in parallel. However, once the total binding capital across all active battles exceeds a predefined Freeze Threshold, the system enters a special Freezing State.
-
-For example, the Freeze Threshold can be defined as:
-
-```math
-\text{Freeze Threshold} = 3 \cdot \text{Fork Threshold}
-```
-
-### Freezing State Behavior
-
-When the system enters the Freezing State:
-
-* The top three markets (by binding capital) are selected.
-* These markets become immune to freezing for the rest of their lifecycle.
-* All other markets are frozen.
-
-Frozen markets can still receive new stakes, but their Attrition Cost remains fixed (i.e., does not increase with time) while the system is in the Freezing State.
-
-### Exiting the Freezing State
-
-The system exits the Freezing State once the total binding capital drops below the Freeze Threshold. After exiting:
-* All frozen markets resume normal attrition behavior.
-* Markets that were granted immunity remain permanently immune.
-* If a new freeze occurs and fewer than three markets are currently immune, new ones are added from the priority queue until the three-slot immunity is filled again.
-
-### Worst-Case Capital Requirement for the Honest Side
-
-In the worst case, attackers create as many markets as possible and submit incorrect reports via designated reporters. The honest side is then forced to defend all these markets, which maximizes their capital requirements.
-
-Before the system enters the Freezing State, the maximum number of active, disputed markets is:
-
-```math
-\text{Number of Disputed Markets} = \left\lfloor \frac{\text{Freeze Threshold}}{\text{Start Deposit}} \right\rfloor
-```
-
-Adding one more market at this point will push the system into Freezing State.
-
-After the system freezes:
-* The top three markets (by binding capital) become immune.
-* Honest participants only need to defend these three, up to the Fork Threshold.
-
-Thus, the worst-case capital requirement for the honest side is:
-
-```math
-\text{Worst Capital Requirement} = \text{Freeze Threshold} + \text{Start Deposit} + \text{Number of Immune Markets} \cdot (\text{Fork Threshold} - \text{Start Deposit})
-```
-
-Assuming:
-
-* `Freeze Threshold = 3 × Fork Threshold`
-* `Number of Immune Markets = 3`
-
-Then:
-
-```math
-\text{Worst Capital Requirement} = 6 \cdot \text{Fork Threshold} - 2 \cdot \text{Start Deposit}
-```
-
-This is a reasonably bounded and predictable worst-case scenario, and a significant improvement over systems like Augur V2.
-
-### Practical Worst Case
-
-Despite this theoretical bound, practical capital requirements may be higher due to stake lock-up. If honest stakers commit funds to markets that later get frozen and don't progress, that capital is stuck without increasing attrition cost-effectively wasting resources.
-
-To mitigate this, one possible improvement is to allow users to withdraw non-binding capital from frozen markets (i.e., funds not currently matched by an opposing side).
-
-### Ongoing Capital Commitments
-
-Honest stakers must always ensure they have at least a tiny edge in each battle to guarantee correct resolution. In practice, it may be wise to maintain one week's worth of attrition capital on each active market, so that they only need to check and reinforce their positions once per week.
-
-## Reward for Prestaking
-
-In closely contested battles, it can be risky for defenders to wait until the timer is nearly expired. An attacker might stake just enough additional capital at the last moment to tip the outcome in their favor - leaving defenders with no time to respond.
-
-To mitigate this risk, defenders must ideally maintain a buffer of capital on their side, ensuring they have enough time to react if the balance shifts. However, when both sides are nearly tied, there's little incentive for users to contribute more capital, since overflow capital (i.e., unmatched excess stake) does not earn additional rewards.
-
-### Incentivizing Defensive Buffers
-
-To solve this, the system can be designed to reward prestaking, by allowing a portion of the attacker's stake to be redistributed to early or buffered defenders. For example, we could reward one week's worth of prestaked capital from the attacker's pool if the defender side wins.
-
-This ensures:
-* Defenders have an incentive to stake early and maintain a buffer.
-* Even if the attacker never closes the gap, defenders are compensated for their proactive commitment.
-* There's always at least one week of decision time before attackers can potentially flip the market unopposed.
-
-## Summary of Benefits
-
-The PLACEHOLDERs Escalition Game mproves upon the Augur V2 escalation game with several key enhancements:
-
-1. **Supports Prestaking**
-   Participants can stake early to avoid stake sniping and signal more clearly on how much capital is ready to defend.
-
-2. **Caps Total Capital Requirement**
-   By introducing a Freeze Threshold and prioritization mechanism, the system limits how much honest participants need to stake.
-
-3. **Enables Instant Forking**
-   If sufficient capital is committed, the system can fork immediately without delay, ensuring fast resolution for high-stakes disputes.
-
-4. **Provides Flexible Participation**
-   Even small capital contributions extend the timer.
-
-5. **Predictable Escalation Curve**
-   The capital required to extend the timer is easy to calculate and independent of other parties' behavior, making planning straightforward.
-
-6. **Fairer Game Dynamics**
-   The system ensures that the winning side only needs to lock slightly more capital than the losing side - promoting balance and fairness.
+## [Escalation Game](Escalation%20Game.md)
 
 ## Fork
 If PLACEHOLDER's Escalation Game fails to find consensus on the outcome, PLACEHOLDER enters into a fork state, during forking state:
@@ -405,3 +171,20 @@ After auction has completed succesfully, markets migrate into all universes
 | ETH | |
 | FORK | |
 | Minting Tokens | Minting means creating tokens out of nowhere. |
+**Market Description**
+**Market End Date**
+**Designated Reporter**
+**Market Creator Bond**
+
+# Random ideas
+- hmm, one soft limit that we have not thought of: We could only allow minting complete sets with some speed limit
+- add global limits to OI and REP that increase over time. To try to phis out attackers of the system as early as possible and limit losses of the system. This could work nicely with artic-tern oracles as they are somewhat parasitic interest resistant
+- todo add analysis on price oracle, how PLACEHOLDER adds liquidity into the pool
+- hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
+
+- splitting pools is actually quite interesting operation. You could have an open pool, which is at its limits, and you notice its managed quite badly. You can then choose to take your rep out, but you cannot as its at debt limit. So you can choose to take your share of debt out with your rep. Now you can for example add REP to it and start managing it yourself
+
+- Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
+
+- As we'll add that total debt ceiling on protocol level. We could also utilize it so that we allow pools to remove their debt when the market ends, but we keep it in the protocol debt until the market finalizes. This way we move the escalation game and fork delay debt problems to the protocol (all rep holders) instead of to a single pool. one issue with that is that the debt in escalation game is not paying any fees
+	-> actually we can put the delayers paying the fees of that as burning REP
