@@ -163,12 +163,8 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 | Dutch Auction Divisor Range     | 1 000 000          |
 
 # Open Questions
-- how can escalation game burn enough to offset:
-    1) OI holders cannot get their funds out
-    2) REP holders need to maintain rep mcap x2 higher than the griefed OI
 - how to fund TWAP / maintain TWAP security?
   -> Do some mathing to figure out how much funds we need to have there
-- If we have max market length, can we come up with a construct that enables longer markets?
 - What to do with invalid markets?
 - Should we have turnstile?
 - How should upgrading protcol work?
