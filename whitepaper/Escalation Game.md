@@ -6,8 +6,8 @@ The game starts if someone stakes more than **Market Creator Bond** on a differe
 If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a War of Attrition: Escalating the battle becomes increasingly expensive over time. The cost to participate for each side grows over time, following this formula:
 
 ```math
-\text{matchedRepInvestment(Time Since Start)} = 
-\frac{\text{OiHarm(Time Since Start)}}{2\cdot \text{BurnShare}} + \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k
+\text{matchedRepInvestment(Time Since Start)} = \max(
+\frac{\text{OiHarm(Time Since Start)}}{2\cdot \text{BurnShare}}, \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k)
 ```
 
 This is also called the attrition cost to stay in the game. In the equation $\text{OiHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea with this is that we always burn more REP, than we estimate that griefers can gain by delaying the Open Interest resolving.
@@ -30,10 +30,10 @@ In this equation $\text{overStake}$ is amount of $REP$ the winning side can stak
 
 We estimate that the OiHarm can be modelled with function:
 ```math
-\text{OiHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{oiFee} \cdot \text{Time Since Start} \frac{REP}{ETH}
+\text{OiHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{OiFee} \cdot \text{Time Since Start} \frac{REP}{ETH}
 ```
 
-In this function $\text{oiFee}$ is estimated per second cost to keep Open Interest locked for extra time and $\frac{REP}{ETH}$ is the estimated price rep/eth price. This oracle does not need to be perfectly accurate because the winners anticipate a significant profit; minor inaccuracies in the price can be absorbed by that profit margin. The variable $α=1.5$ can be adjusted upwards to accommodate greater inaccuracies in the price oracle and in $\text{OiFee}$ estimation.
+In this function $\text{OiFee}$ is estimated per second cost to keep Open Interest locked for extra time and $\frac{REP}{ETH}$ is the estimated price rep/eth price. This oracle does not need to be perfectly accurate because the winners anticipate a significant profit; minor inaccuracies in the price can be absorbed by that profit margin. The variable $α=1.5$ can be adjusted upwards to accommodate greater inaccuracies in the price oracle and in $\text{OiFee}$ estimation.
 
 When the game ends, either to timeout or fork:
 1) Winner is paid $2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start) + \text{preStake}}$ $REP$ (where $\text{matchedRepInvestment(Time Since Start)}+\text{preStake}$ is what was invested into the game)
@@ -45,7 +45,7 @@ Since the `REP/ETH` price can change over the course of the game, the system fix
 
 Assume that an attacker gets paid 
 ```math
-\text{pay} = \text{Single Market Open Interest}\cdot\text{OiFee}\cdot \text{Time Since Start} \frac{REP}{ETH}
+\text{pay(Time Since Start)} = \frac{REP}{ETH}\cdot\text{Single Market Open Interest}\cdot\text{OiFee}\cdot \text{Time Since Start}
 ```
 for delaying the game for $\text{Time Since Start}$ seconds. it also costs:
 ```math
@@ -53,20 +53,26 @@ for delaying the game for $\text{Time Since Start}$ seconds. it also costs:
 ```
 to delay (stake on both sides) to delay the market. We want the attacker to burn more than they stand to gain:
 ```math
-\text{repBurn(Time Since Start)} \geq \text{pay}
+\text{repBurn(Time Since Start)} \geq \text{pay(Time Since Start)}
 ```
 
-This gives us `OiFee`:
+We can compute how much delayers were willing to burn for delaying a market as:
 ```math
-\text{OiFee} \geq \frac{\text{Fork Threshold}}{\text{Single Market Open Interest}} \cdot \frac{2 \cdot \text{BurnShare} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k }{\text{Time Since Start} \cdot (1 - \alpha) }
+\text{Burn Rate} =
+\begin{cases}
+\displaystyle
+\frac{\text{REP Burned}'}{\text{Market Delayed}}
+& \text{if } \text{Market Delay} > 0 \\[12pt]
+0
+& \text{otherwise}
+\end{cases}
 ```
 
-We can then estimate for how long the markets are delayed by:
+We can then create estimator for $\text{OiFee}$ as:
 ```math
-\text{Average Delay} = \frac{\sum_{\text{All Finalized Markets}}\text{Finalized Market Delay}\cdot \text{Finalized Market Open Interest}}{ \sum_{\text{All Finalized Markets}} \text{Finalized Market Open Interest}}
+\text{OiFee} = \max(\frac{\sum_{m \in \text{All Finalized Markets}}\text{\text{Burn Rate}}_m \cdot \text{Single Market Open Interest}_m}{\sum_{m \in \text{All Finalized Markets}}\text{Single Market Open Interest}_m},\text{Min OIFee})
 ```
 
-and assign this as `Time Since Start` for above equation.
 
 ## Cost to Stay in game
 We get following cumulative cost to stay in the battle given each week:
