@@ -1,35 +1,81 @@
 # Escalation Game
-[TODO, should we handle the OI fees somehow(?), as we don't know what they are nowadays]
-
-Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake REP on each respective side. REP holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
+PLACEHOLDER's Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake REP on each respective side. REP holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
 
 The game starts if someone stakes more than **Market Creator Bond** on a different outcome than Initial Reporter/Designated Reporer reported on before **Dispute Period Length** runs out. If this doesn't happen during the time period the outcome proposed by the reporter is finalized.
 
-If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a war of attrition: escalating the battle becomes increasingly expensive over time. The cost to participate grows exponentially, following this formula:
+If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a War of Attrition: Escalating the battle becomes increasingly expensive over time. The cost to participate for each side grows over time, following this formula:
 
 ```math
-\text{Attrition Cost} = \text{Market Creator Bond} \cdot \left( \frac{\text{Fork Threshold}}{\text{Market Creator Bond}} \right)^{\frac{\text{Time Since Start}}{\text{Escalation Game Time Limit}}}
+\text{matchedRepInvestment(Time Since Start)} = 
+\frac{\text{OiHarm(Time Since Start)}}{2\cdot \text{BurnShare}} + \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k
 ```
 
-[todo: we probably want to use the attrition cost from dual escalation game (steeper start that depends on the escalated markets OI)]
-[todo: add a mechanism to control how steep the curve is at start depending on how much games are often escalated, weighted by the markets OI and time]
+This is also called the attrition cost to stay in the game. In the equation $\text{OiHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea with this is that we always burn more REP, than we estimate that griefers can gain by delaying the Open Interest resolving.
+
+ $\text{BurnShare}$ is a fraction of the participating REP that gets burnt, We are using $\text{BurnShare}=\frac{1}{5}$. $\text{Fork Treshold}$ is amount of REP that needs to be contributed to the game at least for the market to fork. If open interest is zero for the market, this is the cost that needs to be paid by each side to fork the market, however, if there's Open Interest in the market, then the fork cost is higher.
+
+$\text{Time Limit}$ is the max amount the Escalation Game lasts. And $k = 5$ is a parameter that can be used to adjust the steepness of the escalation game curve.
+
+The system will then burn $\text{repBurn(Time Since Start)}$ amount of rep:
+```math
+\text{repBurn(Time Since Start)} = 2 \cdot \text{BurnShare} \cdot \text{matchedRepInvestment(Time Since Start)} 
+```
+
+The winner of escalation game (either by timeout, or by fork for each side) gets a profit of:
+```math
+\text{Total Profit in REP} = \frac{2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start)} + \text{overStake}}{\text{matchedRepInvestment(Time Since Start)}+ \text{overStake}} - 1 \geq \text{Expected Profit}
+```
+
+In this equation $\text{overStake}$ is amount of $REP$ the winning side can stake over the matched REP investment while still being rewarded for their stake. The purpose of this parameter is to allow winning side to always stake abit more to be sure the market resolves in their favor. It's always profitable for winning side to stake at most half more of $\text{matchedRepInvestment(Time Since Start)}$ than the losing side to still gain expected profit of 40%.
+
+We estimate that the OiHarm can be modelled with function:
+```math
+\text{OiHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{oiFee} \cdot \text{Time Since Start} \frac{REP}{ETH}
+```
+
+In this function $\text{oiFee}$ is estimated per second cost to keep Open Interest locked for extra time and $\frac{REP}{ETH}$ is the estimated price rep/eth price. This oracle does not need to be perfectly accurate because the winners anticipate a significant profit; minor inaccuracies in the price can be absorbed by that profit margin. The variable $α=1.5$ can be adjusted upwards to accommodate greater inaccuracies in the price oracle and in $\text{OiFee}$ estimation.
+
+When the game ends, either to timeout or fork:
+1) Winner is paid $2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start) + \text{preStake}}$ $REP$ (where $\text{matchedRepInvestment(Time Since Start)}+\text{preStake}$ is what was invested into the game)
+3) REP is being burnt: $\text{repBurn(Time Since Start)}$ $REP$
+
+Since the `REP/ETH` price can change over the course of the game, the system fixes the `REP/ETH` rate at the start of the game. This ensures that both sides receive the same effective price for each second of escalation, maintaining fairness regardless of when the contribution is made.
+
+## Estimating OiFee
+
+Assume that an attacker gets paid 
+```math
+\text{pay} = \text{Single Market Open Interest}\cdot\text{OiFee}\cdot \text{Time Since Start} \frac{REP}{ETH}
+```
+for delaying the game for $\text{Time Since Start}$ seconds. it also costs:
+```math
+\text{repBurn(Time Since Start)} = 2 \cdot \text{BurnShare} \cdot \text{matchedRepInvestment(Time Since Start)} 
+```
+to delay (stake on both sides) to delay the market. We want the attacker to burn more than they stand to gain:
+```math
+\text{repBurn(Time Since Start)} \geq \text{pay}
+```
+
+This gives us `OiFee`:
+```math
+\text{OiFee} \geq \frac{\text{Fork Threshold}}{\text{Single Market Open Interest}} \cdot \frac{2 \cdot \text{BurnShare} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k }{\text{Time Since Start} \cdot (1 - \alpha) }
+```
+
+We can then estimate for how long the markets are delayed by:
+```math
+\text{Average Delay} = \frac{\sum_{\text{All Finalized Markets}}\text{Finalized Market Delay}\cdot \text{Finalized Market Open Interest}}{ \sum_{\text{All Finalized Markets}} \text{Finalized Market Open Interest}}
+```
+
+and assign this as `Time Since Start` for above equation.
 
 ## Cost to Stay in game
 We get following cumulative cost to stay in the battle given each week:
-![image](../images/war_of_attrition.png) (if $\text{Market Creator Bond} = 1$ REP, $\text{Fork Threshold} = 10$ REP $\text{Escalation Game Time Limit} = 7$ weeks)
+
+TODO: MISSING IMAGE
+
 If, at any point in time, only one side has successfully paid the attrition cost, the battle ends and that outcome is finalized.
 
-Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full `Fork Threshold` amount of REP. In this case, PLACEHOLDER forks, allowing the creation of separate universes. Notably, **it is not possible** to deposit more than the `Fork Threshold` on any single side.
-
-### Solving for Resolution Timing
-
-To estimate how much capital is required to push a resolution by a specific time, we can solve for `Time Since Start` in the attrition cost equation. This helps participants plan their capital commitments strategically:
-
-```math
-\boxed{
-\text{Time Since Start} = \text{Time Limit} \cdot \frac{\ln \left( \frac{\text{Attrition Cost}}{\text{Start Deposit}} \right)}{\ln \left( \frac{\text{Fork Threshold}}{\text{Start Deposit}} \right)}
-}
-```
+Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full $\text{Fork Threshold} + \text{OiHarm(Time Limit)}$ amount of REP. In this case, PLACEHOLDER forks, allowing the creation of separate universes. Notably, **it is not possible** to deposit more than the $\text{Fork Threshold} + \text{OiHarm(Time Limit)}$ on any single side.
 
 ### Late Entry into a Battle
 
@@ -37,33 +83,9 @@ An interesting feature of the system is that participants can join an ongoing ba
 
 In other words, **it is not necessary to be part of the battle from the beginning** - but joining later requires paying the full cumulative cost up to that moment.
 
-### Rewards and Settlement
-When a battle ends:
-* The winning side receives their contributed stake back and all the REP staked by the second most staked side.
-* In the case of a fork, each winning side in the forked universes is rewarded accordingly.
-* Losing sides lose all their invested capital
-
-The winning side is rewarded in order of time of contribution to the game. All the Binding Stake and 20% pre-staked over (**Binding Stake** refers to the amount of funds that were, deposited during the battle and Matched by at least one opposing side), is rewarded all the losing sides REP minus 20%, which is burnt.
-
-If all three sides are involved in the battle (`YES`, `NO`, `INVALID`), and one side loses, the losing side’s funds are burned.
-
-> [!NOTE]
->
-> #### Example Gameplay
->
-> 1. Bob reports a market outcome as `YES` and stakes 1 $REP$ as the starting deposit. This initiates the game, and the market is set to resolve in 1 week if undisputed.
->
-> 2. After 1 day, Alice sees the market and believes the correct outcome is `NO`. To dispute, she must stake more than 1 $REP$ on `NO`. She chooses to stake 3 $REP$.
->
->	* This updates the attrition cost and increases the timer to approximately: $t = 7 \cdot \frac{\ln(3)}{\ln(10)} ≈ 3.34 \text{ weeks}$
->
-> 3. No one disputes Alice’s `NO` stake over the next 6 days, so the battle ends with the outcome `NO`.
->
-> 4. As the winner, Alice can claim 0.8 $REP$ from Bob (her opposing matched stake), and 0.2 $REP$ is burnt, resulting in a net gain of 1 $REP$.
-
 ## Capping the Capital
 
-A single Escalation Game still shares a core vulnerability with Augur V2:
+A single escalation described above still shares a core vulnerability with Augur V2:
 An attacker can initiate multiple disputes across many markets simultaneously. Unless honest participants have enough capital to defend all of them, attackers can overwhelm the system.
 
 To address this we introduce a priority queue and a global capital cap.
@@ -135,44 +157,3 @@ This is a reasonably bounded and predictable worst-case scenario, and a signific
 Despite this theoretical bound, practical capital requirements may be higher due to stake lock-up. If honest stakers commit funds to markets that later get frozen and don't progress, that capital is stuck without increasing attrition cost-effectively wasting resources.
 
 To mitigate this, one possible improvement is to allow users to withdraw non-binding capital from frozen markets (i.e., funds not currently matched by an opposing side).
-
-### Ongoing Capital Commitments
-
-Honest stakers must always ensure they have at least a tiny edge in each battle to guarantee correct resolution. In practice, it may be wise to maintain one week's worth of attrition capital on each active market, so that they only need to check and reinforce their positions once per week.
-
-## Reward for Prestaking
-
-In closely contested battles, it can be risky for defenders to wait until the timer is nearly expired. An attacker might stake just enough additional capital at the last moment to tip the outcome in their favor - leaving defenders with no time to respond.
-
-To mitigate this risk, defenders must ideally maintain a buffer of capital on their side, ensuring they have enough time to react if the balance shifts. However, when both sides are nearly tied, there's little incentive for users to contribute more capital, since overflow capital (i.e., unmatched excess stake) does not earn additional rewards.
-
-### Incentivizing Defensive Buffers
-
-To solve this, the system can be designed to reward prestaking, by allowing a portion of the attacker's stake to be redistributed to early or buffered defenders. For example, we could reward one week's worth of prestaked capital from the attacker's pool if the defender side wins.
-
-This ensures:
-* Defenders have an incentive to stake early and maintain a buffer.
-* Even if the attacker never closes the gap, defenders are compensated for their proactive commitment.
-* There's always at least one week of decision time before attackers can potentially flip the market unopposed.
-
-## Summary of Benefits
-
-The PLACEHOLDERs Escalition Game mproves upon the Augur V2 escalation game with several key enhancements:
-
-1. **Supports Prestaking**
-   Participants can stake early to avoid stake sniping and signal more clearly on how much capital is ready to defend.
-
-2. **Caps Total Capital Requirement**
-   By introducing a Freeze Threshold and prioritization mechanism, the system limits how much honest participants need to stake.
-
-3. **Enables Instant Forking**
-   If sufficient capital is committed, the system can fork immediately without delay, ensuring fast resolution for high-stakes disputes.
-
-4. **Provides Flexible Participation**
-   Even small capital contributions extend the timer.
-
-5. **Predictable Escalation Curve**
-   The capital required to extend the timer is easy to calculate and independent of other parties' behavior, making planning straightforward.
-
-6. **Fairer Game Dynamics**
-   The system ensures that the winning side only needs to lock slightly more capital than the losing side - promoting balance and fairness.

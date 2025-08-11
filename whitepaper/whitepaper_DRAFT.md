@@ -141,6 +141,13 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 - should we adjust Market Creator Bond like augurv2 with invalid markets
 - should we punish market creator for making invalid market by burning the stake?
 
+## Long markets
+- hmm, actually you can do longer markets with our current systems, where you can create custom share tokens that can decide on how to use augur oracle, you can choose to ignore the augur market resolution and create new market where do you store the OI once the previous market ends
+- create share token that dumps its OI to some market, then when its close to ending, it withdraws the OI from the market and dumps it to new market
+- there's a risk there thought that augur is full for long time and it fails to take the OI out and put it back
+- but its somewhat low as the OI is in the system at all times, if this operation fails, it means the system is underwater
+- hmm, actually there's also risk that the pools doing this might have been underwater and dont have enough REP to maintain this constructs, and then the long term market token needs to figure out another way to acquire enough OI to augur
+
 # Parameters
 
 | Parameter                       | Value              |
@@ -156,9 +163,15 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 | Dutch Auction Divisor Range     | 1 000 000          |
 
 # Open Questions
-- how to fund TWAP
-- how to maintain TWAP security?
+- how can escalation game burn enough to offset:
+    1) OI holders cannot get their funds out
+    2) REP holders need to maintain rep mcap x2 higher than the griefed OI
+- how to fund TWAP / maintain TWAP security?
+  -> Do some mathing to figure out how much funds we need to have there
+- If we have max market length, can we come up with a construct that enables longer markets?
+- What to do with invalid markets?
 - Should we have turnstile?
+- How should upgrading protcol work?
 
 # Vocabulary
 
@@ -174,6 +187,12 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 **Designated Reporter**
 **Market Creator Bond**
 
+# Attacks
+## OI debt cloning attack by Security Pool
+Security Pools security bond debt is cleared when market is finalized and the debt is pushed to global debt. Security pool could generate debt just before markets end to push a lot globa debt. This generaets a lot debt to the system that is being socialized, the cost to do this attack requires to hold REP and then capital lockup of ETH in the markets that are being finalized. This attack can be recreated with the same REP for 
+-> Fix this by not releasing security debt when market ends, but when its expected to finalize without escalation game
+
+
 # Random ideas
 - hmm, one soft limit that we have not thought of: We could only allow minting complete sets with some speed limit
 - add global limits to OI and REP that increase over time. To try to phis out attackers of the system as early as possible and limit losses of the system. This could work nicely with artic-tern oracles as they are somewhat parasitic interest resistant
@@ -181,3 +200,6 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 - hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
 
 - Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
+
+# Todo's
+- add maximium market length
