@@ -192,7 +192,6 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 Security Pools security bond debt is cleared when market is finalized and the debt is pushed to global debt. Security pool could generate debt just before markets end to push a lot globa debt. This generaets a lot debt to the system that is being socialized, the cost to do this attack requires to hold REP and then capital lockup of ETH in the markets that are being finalized. This attack can be recreated with the same REP for 
 -> Fix this by not releasing security debt when market ends, but when its expected to finalize without escalation game
 
-
 # Random ideas
 - hmm, one soft limit that we have not thought of: We could only allow minting complete sets with some speed limit
 - add global limits to OI and REP that increase over time. To try to phis out attackers of the system as early as possible and limit losses of the system. This could work nicely with artic-tern oracles as they are somewhat parasitic interest resistant

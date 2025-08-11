@@ -61,8 +61,8 @@ We can compute how much delayers were willing to burn for delaying a market as:
 \text{Burn Rate} =
 \begin{cases}
 \displaystyle
-\frac{\text{REP Burned}'}{\text{Market Delayed}}
-& \text{if } \text{Market Delay} > 0 \\[12pt]
+\max(\frac{d \cdot \text{REP Burned}}{dt})
+& \text{if } \text{Market Delayed} > 0 \\[12pt]
 0
 & \text{otherwise}
 \end{cases}
@@ -73,6 +73,7 @@ We can then create estimator for $\text{OiFee}$ as:
 \text{OiFee} = \max(\frac{\sum_{m \in \text{All Finalized Markets}}\text{\text{Burn Rate}}_m \cdot \text{Single Market Open Interest}_m}{\sum_{m \in \text{All Finalized Markets}}\text{Single Market Open Interest}_m},\text{Min OIFee})
 ```
 
+A big assumption made here is that we assume that all the REP getting burned is being spent because one wants to delay the market. However, this is not always true, one might participate escalation game as a means of communication or with intent to fork. For this reason we calculate $\frac{d \cdot \text{REP Burned}}{dt}$ at most at midpoint over the escalation game ($t\in[0,\frac{1}{2}\text{Time Limit}]$).
 
 ## Cost to Stay in game
 We get following cumulative cost to stay in the battle given each week:
