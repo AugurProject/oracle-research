@@ -7,10 +7,10 @@ If the market is disputed, the battle becomes active. Once a battle is active, a
 
 ```math
 \text{Attrition Cost} = \text{matchedRepInvestment(Time Since Start)} = \max(
-\frac{\text{OiHarm(Time Since Start)}}{2\cdot \text{BurnShare}}, \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k)
+\frac{\text{OpenInterestHarm(Time Since Start)}}{2\cdot \text{BurnShare}}, \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k)
 ```
 
-In the equation $\text{OiHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea is to always burn more $REP$ than we estimate delayers can gain by delaying the Open Interest from resolving.
+In the equation $\text{OpenInterestHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea is to always burn more $REP$ than we estimate delayers can gain by delaying the Open Interest from resolving.
 
 $\text{BurnShare}$ is a fraction of the participating REP that gets burnt, We are using $\text{BurnShare}=\frac{1}{5}$. $\text{Fork Treshold}$ is amount of REP that needs to be contributed to the game at least for the market to fork. If open interest is zero for the market, this is the cost that needs to be paid by each side to fork the market, however, if there's Open Interest in the market, then the fork cost is higher.
 
@@ -24,7 +24,7 @@ The system will then burn $\text{repBurn(Time Since Start)}$ amount of rep:
 # Winning the game
 If, at any point in time, only one side has successfully paid the Attrition Cost, the battle ends and that outcome is finalized for the amrket.
 
-Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full $\text{Fork Threshold} + \text{OiHarm(Time Limit)}$ amount of REP. It is not possible to deposit more than the $\text{Fork Threshold} + \text{OiHarm(Time Limit)}$ on any single side.
+Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full $\text{Fork Threshold}$ amount of REP. It is not possible to deposit more than the $\text{Fork Threshold}$ on any single side.
 
 The winner of escalation game (either by timeout, or by fork for each side) profits:
 ```math
@@ -35,10 +35,10 @@ In this equation $\text{overStake}$ is amount of $REP$ the winning side can stak
 
 -TODO: of we end up in fork, overStake =0, and the expected profit is 80%, is this harmful, could we just burn the excess?
 
-## OIHarm Modeling
-OiHarm is modelled as follows:
+## OpenInterestHarm Modeling
+OpenInterestHarm is modelled as follows:
 ```math
-\text{OiHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{OiFee} \cdot \text{Time Since Start} \cdot \frac{REP}{ETH}
+\text{OpenInterestHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{OiFee} \cdot \text{Time Since Start} \cdot \frac{REP}{ETH}
 ```
 
 In this function, $\text{OiFee}$ represents the estimated per-second cost to keep Open Interest locked for an extended period, while REP/ETH denotes the estimated REP to ETH price ratio. The price oracle does not need to be perfectly precise because winners expect to earn a substantial profit; small inaccuracies in the price can be absorbed within that profit margin. The parameter α = 1.5 serves as a safety factor and can be increased to account for larger inaccuracies in both the price oracle and the $\text{OiFee}$ estimation.

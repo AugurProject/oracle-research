@@ -30,6 +30,7 @@ PLACEHOLDER is a game theoretically secure decentralized prediction market and o
 13. People are willing to pay some amount of money for rights to use a betting platform for some amount of time.
 14. Requirement (security): People need to be willing to pay more in fees to rent access to using Augur than 2x the Time Value of Money for the duration of their bet.
 15. We need enough users in the platfom for (not necessary true as the system can be revived later too)
+16. At least 2/3 of Ethereums validators are honest and do not sensor transactions. (Needed for twaps)
 
 [TODO missing security pool assumptions]
 [TODO missing escalation game assmptions]
@@ -148,7 +149,18 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 - but its somewhat low as the OI is in the system at all times, if this operation fails, it means the system is underwater
 - hmm, actually there's also risk that the pools doing this might have been underwater and dont have enough REP to maintain this constructs, and then the long term market token needs to figure out another way to acquire enough OI to augur
 
-# Parameters
+## Upgrading Protocol
+The PLACEHOLDER supports a voluntary contract upgradings via following protocol:
+1) The upgrading party triggers a fork of the system
+2) REP holders can choose to migrate into the new protocol by migrating into UPGRADE universe (and not migrate into YES,NO or INVALID outcomes) that is an address supporting the PLACEHOLDER's upgrading protocol.
+3) The new UPGRADE universe receives the REP and the ETH similarly to any other fork option.
+4) The new protocol can choose to refund the party triggering the fork by minting REP for them
+
+Users choosing not to participate into the protocol upgrade can continue in using the PLACEHOLDER after fork as normal.
+
+## [Price Oracle](Price%20Oracle.md)
+
+## Parameters
 
 | Parameter                       | Value              |
 | ------------------------------- | ------------------ |
@@ -162,12 +174,14 @@ In the case of auction failure to raise enough ETH to cover traders before minti
 | REP to ETH Auction Length       | 1 week             |
 | Dutch Auction Divisor Range     | 1 000 000          |
 
+
 # Open Questions
 - how to fund TWAP / maintain TWAP security?
   -> Do some mathing to figure out how much funds we need to have there
+	-> fund via security pools, 
 - What to do with invalid markets?
 - Should we have turnstile?
-- How should upgrading protcol work?
+- how to ensure liquidity after forks?
 
 # Vocabulary
 
