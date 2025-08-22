@@ -14,7 +14,7 @@ For price data, we use Uniswap’s TWAP (Time-Weighted Average Price) oracles to
 
 We use Uniswap’s TWAPs differently depending on the operation:
 
-1. When minting new Security Bonds, the above inequality must hold for both the 30-minute and 1-day TWAP prices.
+1. When minting new Security Bonds, the above inequality must hold for both the 30-min and 1-day minimum TWAP prices.
 2. If the inequality fails for the 1-day TWAP, the position becomes eligible for liquidation.
 
 By managing your own Security Pool with your REP tokens providing Security Bonds, you can trade on PLACEHOLDER while only incurring the cost of locked capital.

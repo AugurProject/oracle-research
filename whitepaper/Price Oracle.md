@@ -120,7 +120,7 @@ $$
 Where $\text{Tracking Accuracy Ticks}$ is the amount of deviation in ticks we allow the pool to have. This is $2L\sqrt{REP/ETH}$ worth of ETH (both REP and ETH side liquidity combined). This means that the liquidity requirement does not actually depend on the price:
 
 $$
-\text{Liquidity in ETH} \;\ge\;  2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{racking Accuracy Ticks}/2} (1 - \text{FEE}) 1.0001^{\text{racking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{racking Accuracy Ticks}}} - 1) ((1 - \text{FEE}) 1.0001^{\text{racking Accuracy Ticks}} - 1) }
+\text{Liquidity in ETH} \;\ge\;  2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
 $$
 
 However, our liquiditys value change depending on the price:
