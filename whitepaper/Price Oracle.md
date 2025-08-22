@@ -96,14 +96,7 @@ $$
 \text{Total Manipulation Amount} \to \infty,
 $$
 
-then the revenue from the attack grows linearly with the manipulation amount, while the cost only increases proportionally to the square root of the manipulation amount.
-
-Because
-
-* $\text{Manipulation Cost} \sim \sqrt{\text{Total Manipulation Amount}}$
-* $\text{Attack Revenue} \sim \text{Total Manipulation Amount}$
-
-the revenue will eventually outpace the cost, ensuring profitability at sufficiently large manipulations.
+then the revenue from the attack grows linearly ($\text{Attack Revenue} \sim \text{Total Manipulation Amount}$) with the manipulation amount, while the cost only increases proportionally to the square root of the manipulation amount ($\text{Manipulation Cost} \sim \sqrt{\text{Total Manipulation Amount}}$). The revenue will eventually outpace the cost, ensuring profitability at sufficiently large manipulations.
 
 For this reason, instead of relying on the TWAP price to determine whether new open interest can be minted (both locally and globally), and instead of taking the last spot price in a block as the oracle price, we use the minimum REP/ETH price observed within a block for the TWAP.
 
