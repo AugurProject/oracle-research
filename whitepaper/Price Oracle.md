@@ -29,11 +29,12 @@ This means we need a price oracle that is accurate enough to be within $[-50\%,+
 
 ## Price oracle design
 
-```math
-\text{TWAP}_{REP/ETH} = \prod_{i=0}^n{p_i}=\sum_{i=0}^n \text{Tick}_i
-```
+We use winsorized geometric mean TWAPs The oracle follows the standard geometric mean TWAP design, with the key modification that the spot prices fed into it are bounded. Specifically, the spot price for each block is winsorized by limiting the tick movement relative to the 10-block TWAP. The allowed range is $[-9116, 9116]$ ticks, which corresponds to a maximum increase of approximately 2.5x or a decrease of about 60%. This bounding mechanism ensures that short-term spot price fluctuations cannot exceed predefined limits, thereby constraining their influence on the TWAP.
 
-We use 30-minute and 1-day winsorized geometric mean TWAPs. The oracle follows the standard geometric mean TWAP design, with the key modification that the spot prices fed into it are bounded. Specifically, the spot price for each block is winsorized by limiting the tick movement relative to the 10-block TWAP. The allowed range is $[-9116, 9116]$ ticks, which corresponds to a maximum increase of approximately 2.5x or a decrease of about 60%. This bounding mechanism ensures that short-term spot price fluctuations cannot exceed predefined limits, thereby constraining their influence on the TWAP.
+Standard TWAP is defined as follows:
+```math
+\text{TWAP}_{REP/ETH} = \prod_{i=0}^n{price_i}=1.0001^{\frac{1}{n}\sum_{i=0}^n \text{tick}_i}
+```
 
 Winsorization plays a crucial role in preventing manipulation by Ethereum validators. Without it, a validator could temporarily push the spot price to an extreme level for a single block and then revert it in the following block. This would significantly distort the geometric mean TWAP, while costing the validator only the liquidity provider fees.
 
@@ -43,29 +44,32 @@ Even with these defenses, the security of the oracle ultimately relies on the as
 
 ## Non-validator manipulation
 
-Non validators can also manipulate the price feed by moving the price and then let arbitragers move it back the next block. This is very expensive thought. To move Price by manipulation amount in a single block, assuming all the liquidity is full range. Let's then assume arbitragers always move the price back after manipulation.
+Non-validators can manipulate the price feed by temporarily pushing the pool price away from its fair value. Arbitragers then restore the price in the following block. This process causes the oracle to record an artificially inflated spot price.
 
-To perform the manipulation attack against a single block, it costs:
+Since arbitragers correct the price each block, the attacker must repeatedly spend capital to maintain the manipulation. The cost of this attack is incurred continuously, block by block.
+
+Assuming all liquidity is provided across the full range, the cost of manipulating the price for a single block is:
 
 $$
 \text{Single Block Cost} = \text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
 $$
 
-This means the manipulator puts ETH into the pool and receives REP back. The REP is valued with the original price of the pool. The arbitragers then manipulate the price back, but the TWAP oracle will record the manipulated price as a spot price for it. Let's then assume the manipulator manipulates every block in the TWAP by the same amount:
+In this attack, the manipulator swaps ETH into the pool to push the price, receiving REP in return. The REP is valued according to the pool’s original (pre-manipulation) price. Arbitragers then step in and trade the price back to its fair level.
+
+Even though the price is corrected, the TWAP oracle records the manipulated price as the spot price for that block.
+
+Now, suppose the manipulator repeats this action every block of the TWAP window, shifting the price by the same amount each time. This creates a sustained distortion in the oracle-reported average price, at the cost of paying for the manipulation in each block.
+
 ```math
 \text{Manipulation Cost}_{ETH} = \text{TWAP Length}
 \cdot
 \text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
 ```
-[https://eprint.iacr.org/2022/445.pdf]
+To pump the REP/ETH price by $\text{Total Manipulation Amount}$($1.0001^\text{Per Block Tick Manipulation}$) percentage for TWAP of length $\text{TWAP length}$ Article [TWAP Oracle Attacks: Easier Done than Said?](https://eprint.iacr.org/2022/445.pdf) goes throught the derivation of this equation.
 
-To pump the REP/ETH price by $\text{Total Manipulation Amount}$ percentage for TWAP of length $\text{TWAP length}$. By pumping the price, the attacked can profit
+### Profiting from manipulation
 
-```math
-\text{Profit} = \text{Attack Revenue} - \text{Manipulation Cost}_{ETH} 
-```
-
-Let's assume the attacker is able to manipulate the price to be higher than Security Parameter, acquire false tokens for all this open interest for free (for simpler analysis) fork the system for free (for simpler analysis) and then Migrate their share of Open Interest to lying universe and then pocket this excess while losing the REP in process:
+Let's assume the attacker is able to manipulate the price to be higher than Security Parameter, acquire false tokens for all this open interest for free (for simpler analysis) fork the system for free (for simpler analysis) and then migrate their share of Open Interest to lying universe and then pocket this excess while losing the REP in process:
 
 ```math
 \text{Attack Revenue} = \text{Open Interest} - \text{REP migrated} / \frac{REP}{ETH}
@@ -75,31 +79,58 @@ Let's assume the attacker also controls all the REP, and we get:
 \text{Attack Revenue} = \frac{\text{REP Market Cap}}{\text{Security Parameter}}\cdot {\text{Total Manipulation Amount}} - \text{REP Market Cap}
 ```
 
-```math
-\text{Tota Manipulation Amount} = 1.0001^\text{Per Block Tick Manipulation}
-```
-
-where $\text{Open Interest} > \text{REP migrated} / \frac{REP}{ETH}$
-
 This simplifies to:
 ```math
-\text{Attack Revenue} = \text{REP Market Cap} \left( \frac{\text{Total Manipulation Amount}}{\text{Security Parameter}} - 1\right)
+\text{Attack Revenue} = \text{REP Market Cap} \left( \frac{\text{Total Manipulation Amount}}{\text{Security Parameter}} - 1\right).
 ```
 
-We can then calculate when attacker is not profitable $\text{Profit} < 0 $, and we get:
+The attack is profitable whenever
 
 $$
-\text{Pool Fraction} = \frac{\text{ETH}_{Pool}}{\text{REP Market Cap}} > \frac{(1 - \text{Pool Fee})}{\text{TWAP Length} \cdot \text{Pool Fee} \cdot \text{Security Parameter}} \cdot \frac{\big( 1.0001^\text{Per Block Tick Manipulation} - \text{Security Parameter} \big) \cdot \big( 1 + 1.0001^\text{Per Block Tick Manipulation} \big)}{1.0001^\text{Per Block Tick Manipulation} - 1}
+\text{Attack Revenue} > \text{Manipulation Cost}_{ETH}
 $$
 
+If the attacker pushes the price toward infinity, i.e.
 
-### Attacks
-#### Liquidity triggering attacks
-- steal from security pools by holding rep and liquidating other REP
-#### Sell More Security Bonds from Your pool
-- If you can manipulate rep/eth to be very high, you can mint a lot security bonds and sell them while profiting
+$$
+\text{Total Manipulation Amount} \to \infty,
+$$
 
-#### Steal Open Interest
-- If you can manipulate rep/eth to be very high, other peoples security pools might allow you to mint complete sets for a market with very uneven odds, you could sell your NO shares for epsilon
--> then trigger fork where the actual REP value is less than open interest you have generated and you can fork the system to steal this open interest (by resolving market wrong)
+then the revenue from the attack grows linearly with the manipulation amount, while the cost only increases proportionally to the square root of the manipulation amount.
 
+Because
+
+* $\text{Manipulation Cost} \sim \sqrt{\text{Total Manipulation Amount}}$
+* $\text{Attack Revenue} \sim \text{Total Manipulation Amount}$
+
+the revenue will eventually outpace the cost, ensuring profitability at sufficiently large manipulations.
+
+For this reason, instead of relying on the TWAP price to determine whether new open interest can be minted (both locally and globally), and instead of taking the last spot price in a block as the oracle price, we use the minimum REP/ETH price observed within a block for the TWAP.
+
+This approach ensures that even a single arbitrager interacting with the pool can restore the price to its fair value, preventing upward manipulation from being recorded by the oracle.
+
+The trade-off is that downward manipulation remains possible. An attacker can repeatedly push the price lower, paying only the liquidity provider fees each time. By doing so, they could censor the protocol by preventing the creation of additional open interest. However, this attack can be mitigated: defenders can counteract it by adding more liquidity to the pool, increasing the cost of sustained downward manipulation.
+
+## Liquidity required to enable arbitrage
+
+The oracle’s correctness depends on arbitragers being able to restore fair prices. Whenever the oracle records a mispriced value, an arbitrager should have the opportunity to step in and profit by trading against the pool.
+
+If we assume that performing an arbitrage trade costs $\text{Arbitrage Cost}$ ETH (e.g., from Ethereum gas fees), then the oracle’s pool must contain at least the following minimum liquidity to make arbitrage economically viable:
+
+$$
+L \;\ge\; 
+\frac{ \text{Arbitage Cost} \cdot 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} \cdot \sqrt{\text{Pool Price}_{REP/ETH}} }{ 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} - 1 }
+\cdot 
+\frac{ (1 - \text{FEE}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} }{ (1 - \text{FEE}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} - 1 }
+$$
+
+Where $\text{Tracking Accuracy Ticks}$ is the amount of deviation in ticks we allow the pool to have. This is $2L\sqrt{REP/ETH}$ worth of ETH (both REP and ETH side liquidity combined). This means that the liquidity requirement does not actually depend on the price:
+
+$$
+\text{Liquidity in ETH} \;\ge\;  2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{racking Accuracy Ticks}/2} (1 - \text{FEE}) 1.0001^{\text{racking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{racking Accuracy Ticks}}} - 1) ((1 - \text{FEE}) 1.0001^{\text{racking Accuracy Ticks}} - 1) }
+$$
+
+However, our liquiditys value change depending on the price:
+```math
+\text{New liquidity in ETH} = \text{Previous Liquidity in ETH}\cdot\sqrt{\frac{\text{New Price}}{\text{Old Price}}}
+```
