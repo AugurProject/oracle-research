@@ -111,7 +111,7 @@ The oracle’s correctness depends on arbitragers being able to restore fair pri
 If we assume that performing an arbitrage trade costs $\text{Arbitrage Cost}$ ETH (e.g., from Ethereum gas fees), then the oracle’s pool must contain at least the following minimum liquidity to make arbitrage economically viable:
 
 $$
-L \;\ge\; 
+L \ge 
 \frac{ \text{Arbitage Cost} \cdot 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} \cdot \sqrt{\text{Pool Price}_{REP/ETH}} }{ 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} - 1 }
 \cdot 
 \frac{ (1 - \text{FEE}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} }{ (1 - \text{FEE}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} - 1 }
@@ -120,10 +120,19 @@ $$
 Where $\text{Tracking Accuracy Ticks}$ is the amount of deviation in ticks we allow the pool to have. This is $2L\sqrt{REP/ETH}$ worth of ETH (both REP and ETH side liquidity combined). This means that the liquidity requirement does not actually depend on the price:
 
 $$
-\text{Liquidity in ETH} \;\ge\;  2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
+\text{Liquidity in ETH} \ge 2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{FEE}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
 $$
 
 However, our liquiditys value change depending on the price:
 ```math
 \text{New liquidity in ETH} = \text{Previous Liquidity in ETH}\cdot\sqrt{\frac{\text{New Price}}{\text{Old Price}}}
 ```
+
+## Funding price oracle
+The price oracle needs to be funded to track the price.
+
+Here's some ideas on how it could be funded
+1) Its not funded, but the whole system freezes if there's not enough liquidity
+2) If the system detects the system is underwater, an auction is held to purchase full range liquidity tokens for the pool
+3) Security Pools need to hold a position in the oracle
+

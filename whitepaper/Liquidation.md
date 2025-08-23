@@ -1,5 +1,8 @@
 # Liquidating Security Pools
 
+TODO: there's a bug that bing liquidated decreases the REP in pool and thus decrease the liquidation price, but the lazy liquidator doesnt use updated value
+
+
 If a Security Pool becomes undercollateralized, it begins to burn it's **Security Deposit** at an exponential decay rate. This liquidation process can be stopped or avoided by:
 
 1. Depositing additional REP into the pool

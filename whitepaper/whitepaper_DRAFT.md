@@ -174,11 +174,8 @@ Users choosing not to participate into the protocol upgrade can continue in usin
 | REP to ETH Auction Length       | 1 week             |
 | Dutch Auction Divisor Range     | 1 000 000          |
 
-
 # Open Questions
 - how to fund TWAP / maintain TWAP security?
-  -> Do some mathing to figure out how much funds we need to have there
-	-> fund via security pools, 
 - What to do with invalid markets?
 - Should we have turnstile?
 - how to ensure liquidity after forks?
