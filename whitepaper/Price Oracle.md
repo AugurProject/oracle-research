@@ -154,9 +154,10 @@ Here's some ideas on how it could be funded
 | Relative Price Change         | 5                      |
 | Gas Uncertainty Multiplier    | 4                      |
 | Worst Case Swap Gas           | ?                      |
-| Tracking Accuracy Ticks       | 1024                   |
+| Tracking Accuracy Ticks       | 1000                   |
 | Pool Fee                      | 2% (includes all fees) |
 | Security Parameter            | 2                      |
 | Tick-spacing                  | 200                    |
 | Winzoring Range (ticks)       | $[-9116, 9116]$        |
 | Winzoring Comparison (Blocks) | 10                     |
+| TWAP Length                   | 1 day                  |
