@@ -4,11 +4,11 @@ The PLACEHOLDER needs a reliable $\frac{REP}{ETH}$ price oracle for four purpose
 1) The Escalation Game needs to know how much the Open Interest is worth in REP, to know how much Open Interest is being forcefully locked out from withdrawing because of a delay
 2) The Security Pools have a Local Security Bond minting check:
 ```math
-\text{Security Bonds Minted} \leq \frac{\text{Security Deposit}}{\text{Security Multiplier} \times \text{Price}_{REP/ETH}}
+\text{Security Bonds Minted} \leq \frac{\text{Security Deposit}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
 ```
 3) The Security Pools have a Global Security Bond minting check:
 ```math
-\text{Total Security Bonds Minted} \leq \frac{\text{REP Supply}}{\text{Security Multiplier} \times \text{Price}_{REP/ETH}}
+\text{Total Security Bonds Minted} \leq \frac{\text{REP Supply}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
 ```
 4) The liquidation protocol attempts to enforce Local Security Bond limit for each Security pool:
 ```math
@@ -25,7 +25,7 @@ An attacker can exploit a price oracle by artificially moving the reported price
 	- Make it more difficult to trigger a fork, since funds must be raised faster
 	- Enable Security Pools to mint unsafe amounts of Security Bonds
 
-This means we need a price oracle that is accurate enough to be within $[-50\%,+100\%]$ of the correct values (Security Parameter away).
+This means we need a price oracle that is accurate to within [-50%, +100%] relative error (defined by the Security Parameter).
 
 ## Price oracle design
 
@@ -33,7 +33,7 @@ We use winsorized geometric mean TWAPs The oracle follows the standard geometric
 
 Standard TWAP is defined as follows:
 ```math
-\text{TWAP}_{REP/ETH} = \prod_{i=0}^n{\text{price}_i}=1.0001^{\frac{1}{n}\sum_{i=0}^n \text{tick}_i}
+\text{TWAP}_{REP/ETH} = \prod_{i=0}^n{\text{price}_i}^\frac{1}{n}=1.0001^{\frac{1}{n}\sum_{i=0}^n \text{tick}_i}
 ```
 
 Winsorization plays a crucial role in preventing manipulation by Ethereum validators. Without it, a validator could temporarily push the spot price to an extreme level for a single block and then revert it in the following block. This would significantly distort the geometric mean TWAP, while costing the validator only the liquidity provider Pool Fees.
@@ -51,7 +51,7 @@ Since arbitragers correct the price each block, the attacker must repeatedly spe
 Assuming all liquidity is provided across the full range, the cost of manipulating the price for a single block is:
 
 $$
-\text{Single Block Cost} = \text{ETH}_{Pool} \cdot \frac{\text{Pool Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
+\text{Single Block Cost} = \text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
 $$
 
 In this attack, the manipulator swaps ETH into the pool to push the price, receiving REP in return. The REP is valued according to the pool’s original (pre-manipulation) price. Arbitragers then step in and trade the price back to its fair level.
@@ -63,7 +63,7 @@ Now, suppose the manipulator repeats this action every block of the TWAP window,
 ```math
 \text{Manipulation Cost}_{ETH} = \text{TWAP Length}
 \cdot
-\text{ETH}_{Pool} \cdot \frac{\text{Pool Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
+\text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
 ```
 To pump the REP/ETH price by $\text{Total Manipulation Amount}$($1.0001^\text{Per Block Tick Manipulation}$) percentage for TWAP of length $\text{TWAP length}$ Article [TWAP Oracle Attacks: Easier Done than Said?](https://eprint.iacr.org/2022/445.pdf) goes throught the derivation of this equation.
 
@@ -112,7 +112,7 @@ If we assume that performing an arbitrage trade costs $\text{Arbitrage Cost}$ ET
 
 $$
 L \ge 
-\frac{ \text{Arbitage Cost} \cdot 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} \cdot \sqrt{\text{Pool Price}_{REP/ETH}} }{ 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} - 1 }
+\frac{ \text{Arbitrage Cost} \cdot 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} \cdot \sqrt{\text{Pool Price}_{REP/ETH}} }{ 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} - 1 }
 \cdot 
 \frac{ (1 - \text{Pool Fee}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} }{ (1 - \text{Pool Fee}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} - 1 }
 $$
@@ -120,20 +120,20 @@ $$
 Where $\text{Tracking Accuracy Ticks}$ is the amount of deviation in ticks we allow the pool to have. This is $2L\sqrt{REP/ETH}$ worth of ETH (both REP and ETH side liquidity combined). This means that the liquidity requirement does not actually depend on the price:
 
 $$
-\text{Liquidity in ETH} \ge 2 \cdot \frac{\text{Arbitage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
+\text{Liquidity in ETH} \ge 2 \cdot \frac{\text{Arbitrage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
 $$
 
-However, our liquiditys value change depending on the price:
+However, our liquidity's value change depending on the price:
 ```math
-\text{New liquidity in ETH} = \text{Previous Liquidity in ETH}\cdot\sqrt{\frac{\text{New Price}}{\text{Old Price}}} = \text{Previous Liquidity in ETH}\cdot\sqrt{\text{Relative Price Change}}
+\text{New liquidity in ETH} = \text{Previous Liquidity in ETH}\cdot\sqrt{\max(\frac{1}{\text{Relative Price Change}}, \text{Relative Price Change})}
 ```
 
 We want to support some change of price here, eg $\text{Relative Price Change} = 5$, meaning we need to have `2.23` times more liquidity, than with constant price.
 
-Arbitage Cost can be estimated to be:
+Arbitrage Cost can be estimated to be:
 
 ```math
-\text{Arbitage Cost} = 2 \cdot \text{Gas Uncertainty Multiplier} \cdot \text{Base Pool Fee} \cdot \text{Worst Case Swap Gas}
+\text{Arbitrage Cost} = 2 \cdot \text{Gas Uncertainty Multiplier} \cdot \text{Base Pool Fee} \cdot \text{Worst Case Swap Gas}
 ```
 
 Here `2` is used to assume the arbitrager sources the funds from similar exchange and it costs the same to do swap there.
@@ -158,6 +158,6 @@ Here's some ideas on how it could be funded
 | Pool Fee                      | 2% (includes all fees) |
 | Security Parameter            | 2                      |
 | Tick-spacing                  | 200                    |
-| Winzoring Range (ticks)       | $[-9116, 9116]$        |
-| Winzoring Comparison (Blocks) | 10                     |
+| Winzoring Range               | $[-9116, 9116]$ ticks  |
+| Winzoring Comparison          | 10 blocks              |
 | TWAP Length                   | 1 day                  |
