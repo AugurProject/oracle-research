@@ -1,43 +1,44 @@
 # PLACEHOLDER - a Decentralized Oracle and Prediction Market Platform
 
-PLACEHOLDER is a game theoretically secure decentralized prediction market and oracle service running on Ethereum. PLACEHOLDER is built on ideas from Augur V2, DEFI protocols on and other oracles.
+## Abstract
 
-## Summary
+PLACEHOLDER is a game-theoretically secure, censorship-resistant oracle and prediction market protocol on Ethereum. The system enables users to create, trade, and resolve prediction markets in a way that aligns incentives toward accurate reporting of real-world outcomes. PLACEHOLDER builds upon the lessons of [Augur V2](https://github.com/AugurProject/whitepaper/releases/download/v2.0.6/augur-whitepaper-v2.pdf) while integrating ideas from decentralized finance (DeFi) protocols such as Maker, Uniswap, Aave, and Curve.
 
-## Motivation
+At its core, PLACEHOLDER is built on the assumption that users will continue to adopt and support the honest version of the protocol, ensuring that the value of the ecosystem aligns with the truth. To achieve this, PLACEHOLDER introduces several novel mechanisms - including Truth Auctions, Open Interest Migration, Liquid Escalation Games, Security Pools, and fork-based protocol upgrades - to deliver a fully decentralized prediction market that operates without reliance on even a single centralized components.
+
+## Introduction
+
+Bringing real-world event information on-chain in a trustless way on Ethereum has proven to be a very challenging problem. Current solutions in the space typically rely on multisignatures controlled by a small group of participants, where punishments for misbehavior are relatively weak and ultimately trust-based. The core issue with such trust-based designs is their vulnerability to an "exit scam": a scenario in which participants abandon their long-term reputation to execute a single large-scale exploit, extracting maximum value from the system before disappearing.
 
 ## PLACEHOLDER Security Assumption
 
+PLACEHOLDER's design is based on a set of core assumptions. While the system includes mechanisms to help uphold these assumptions, if they are broken the protocol may no longer function as intended. In some cases, the system might continue operating even if one or more assumptions fail, but its security can no longer be guaranteed.
+
 1. **Users are greedy**: Users value more money over less money.
-2. **A fork doesn't change the total value of the system**. Market cap of a previous universe equals ATLEAST market cap of the formed universes: 
+2. **A fork doesn't significantly lower the total value of the system**: Market cap of a previous universe equals ATLEAST market cap of the formed universes withing a security multiplier: 
 ```math
-\text{value of assets prior fork}= \sum_{\text{future universes}}{\text{value of assets}_{universe}}
+\text{Value of assets prior fork} \leq \frac{\sum_{\text{Future universes}}{\text{Value of assets}_{universe}}}{\text{Security Multiplier}}
 ```
-3. **Users value honest universe(s)**: User prefers to use an universe that is honest in their opinion:
+3. **Market Cap ≈ Discounted Cash Flow**: Market Capitalization is a reasonable accurate proxy for Discounted Cast Flow of an asset.
+4. **Users value honest universe(s)**: User prefers to use an universe that is honest in their opinion:
 ```math
-\text{value of assets prior fork } = \text{value of assets}_{\text{truthful universe}}
+\text{Value of assets prior fork } ≈ \text{Value of assets}_{\text{truthful universe}}
 ```
-4. **Neglible operation costs**: Transaction fees (eg, gas fee) are neglible compared to financial value of the transactions.
-5. **Access to information**: Users should have reliable and timely access to information in order to determine the most truthful outcome of a market.
-6. **Migrating is not too hard**: Users, exchanges and other tools using the systems are okay to migrate into fork they believe is truthful.
-
-7. Some amount of truthfull REP can be sold for ETH lost in a fork for a small enough fee:
-8. It is assumed Traders hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market
-9. REP is liquid enough (access is needed to create security pools if existing holders do not), needed for dispute games too
-10. TWAP price oracle is hard enough to manipulate (TODO: research more)
-11. The system is able to maintain inequality: Open interest < REP's market cap
-12. People find value in being able to use a betting platform.
-13. People are willing to pay some amount of money for rights to use a betting platform for some amount of time.
-14. Requirement (security): People need to be willing to pay more in fees to rent access to using Augur than 2x the Time Value of Money for the duration of their bet.
-15. We need enough users in the platfom for (not necessary true as the system can be revived later too)
-16. At least 2/3 of Ethereums validators are honest and do not sensor transactions. (Needed for twaps)
-
-[TODO missing security pool assumptions]
-[TODO missing escalation game assmptions]
-[TODO go throught these again and see which are really assumptions and which can be deriverd]
+5. **Neglible operation costs**: Transaction fees (eg, gas fee) are neglible compared to financial value of the transactions.
+6. **Access to information**: Users should have reliable and timely access to information in order to determine the most truthful outcome of a market.
+7. **Migrating is not too hard**: Users, exchanges and other tools using the systems are okay to migrate into fork they believe is truthful.
+8. **An auction is an efficient way to convert an asset into another**: Some amount of truthfull Reputation tokens can be sold for ETH lost in a fork for a reasonable fee.
+9. **Traders Hold Reputation tokens**: Traders hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market.
+10. **Reputation is liquid**: REP token is liquid enough that reasonable amounts of it can be accessed from open market.
+11. **The inequality is maintained**: The system is able to maintain inequality at all times: $$\text{Open Interest} < \text{REP's Discounted Cash Flow}$$
+12. **Access to PLACEHOLDER is valuable**: Users find it valuable to be able to use PLACEHOLDER to access prediction markets and this value is atleast $\text{Security Parameter}$ times higher than the value it secures.
+13. **The system has enough users**: The system encorporated enough users so that 
+14. **Ethereum is censorship resistant**: The users should be able to send transactions on ethereum that will be included on the chain in reasonble timeframes.
+15. **Some amount of REP tokens are held by honest reporter**: (todo, the number comes from escalation game and its params)
 
 ## System Overview
 ![image](images/SystemFlow.png)
+
 ### System Participants
 - REP Holders
 - OI holders
@@ -125,7 +126,7 @@ This is game theoretically sound operation to make, as the REP migrating is more
 
 The ETH that remains behind is distributed to REP holders who failed to migrate. The REP becomes worthless at this point and serves no purpose other than to redeem for ETH. Transfers remain enabled so people can withdraw REP from exchanges and other contracts in order to redeem for ETH, but it no longer serves any purpose within the system.
 
-## ETH for REP Auction
+## Truth Auction: ETH for REP Auction
 On each universe, a dutch auction is started right after when ETH migration is finalized. In the auction, people are bidding ETH in exchange for REP of the given universe. The auction starts by offering $\frac{\text{REP Supply}}{\text{Dutch Auction Divisor Range}}$ REP for the needed amount of ETH and the amount of REP offered increases every second until it reaches $\text{REP Supply}\cdot \text{Dutch Auction Divisor Range}$ REP offered. The auction ends when either (A) one or more parties combined are willing to buy the ETH deficit for the current REP price or (B) it reaches the end without enough ETH willing to buy even at the final price. The final prize is reached when the auction has lasted $\text{REP to ETH Auction Length}$.
 
 The auction participants are also able to submit non-cancelable limit orders to the auction "I am willing to buy 100 REP with price of 10 ETH", these limit orders can be submited right after the system has entered into a fork state, even thought the auction itself has not yet started.
@@ -162,17 +163,17 @@ Users choosing not to participate into the protocol upgrade can continue in usin
 
 ## Parameters
 
-| Parameter                       | Value              |
-| ------------------------------- | ------------------ |
-| Escalation Game Time Limit      | 7 weeks            |
-| Market Creator Bond             | 1 REP              |
-| Fork Theshold                   | 2.5% of REP Supply |
-| Security Multiplier             | 2                  |
-| Fork Duration                   | 8 weeks            |
-| Designated Reporter Time        | 3 days             |
-| Dispute Period Length           | 4 days             |
-| REP to ETH Auction Length       | 1 week             |
-| Dutch Auction Divisor Range     | 1 000 000          |
+| Parameter                       | Value                                |
+| ------------------------------- | ------------------------------------ |
+| Escalation Game Time Limit      | 7 weeks                              |
+| Market Creator Bond             | 1 / 11 000 000 * 100 % of REP Supply |
+| Fork Theshold                   | 2.5% of REP Supply                   |
+| Security Multiplier             | 2                                    |
+| Fork Duration                   | 8 weeks                              |
+| Designated Reporter Time        | 3 days                               |
+| Dispute Period Length           | 4 days                               |
+| REP to ETH Auction Length       | 1 week                               |
+| Dutch Auction Divisor Range     | 1 000 000                            |
 
 # Open Questions
 - how to fund TWAP / maintain TWAP security?
@@ -209,3 +210,4 @@ Security Pools security bond debt is cleared when market is finalized and the de
 
 # Todo's
 - add maximium market length
+- write about unclear markets

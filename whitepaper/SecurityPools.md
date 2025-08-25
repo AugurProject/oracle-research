@@ -36,7 +36,7 @@ While Security Pools have their local limits on how much Security Bonds they can
 \text{Total Security Bonds Minted} \leq \frac{\text{REP Supply}}{\text{Security Multiplier} \times \text{Price}_{REP/ETH}}
 ```
 
-If this requirement is broken for 30-minute or 1 day TWAP's the system does not allow minting more Security Bonds. Here
+If this requirement is broken for 30-minute or 1 day min TWAP's the system does not allow minting more Security Bonds. Here
 
 ```math
 \text{Total Security Bonds Minted} = \sum_i^{Pools} \left( \text{Security Bonds Minted}_i \right) \ + \ \text{Global Security Bond Debt}
@@ -63,3 +63,10 @@ REP holders participating in Security Pools managed by others should exercise ca
 ### Good practices for Open Security Pools
 - REP holders should be able to fork of the pool by taking their share of the open interest with them into new pool to exit the pool
 - REP holders should be allowed to use their share of voting power for Escalation Game
+
+
+## Parameters
+
+| Parameter                     | Value                  |
+| ----------------------------- | ---------------------- |
+| Security Parameter            | 2                      |

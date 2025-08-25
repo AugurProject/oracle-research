@@ -33,7 +33,7 @@ The winner of escalation game (either by timeout, or by fork for each side) prof
 
 In this equation $\text{overStake}$ is amount of $REP$ the winning side can stake over the matched REP investment while still being rewarded for their stake. The purpose of this parameter is to allow winning side to always stake more to be sure the market resolves in their favor. It's always profitable for winning side to stake at most half more of $\text{matchedRepInvestment(Time Since Start)}$ than the losing side to still gain expected profit of 40%.
 
--TODO: of we end up in fork, overStake =0, and the expected profit is 80%, is this harmful, could we just burn the excess?
+-TODO: of we end up in fork, overStake = 0, and the expected profit is 80%, is this harmful, could we just burn the excess?
 
 ## OpenInterestHarm Modeling
 OpenInterestHarm is modelled as follows:
@@ -166,3 +166,16 @@ This is a reasonably bounded and predictable worst-case scenario, and a signific
 Despite this theoretical bound, practical capital requirements may be higher due to stake lock-up. If honest stakers commit funds to markets that later get frozen and don't progress, that capital is stuck without increasing attrition cost-effectively wasting resources.
 
 To mitigate this, one possible improvement is to allow users to withdraw non-binding capital from frozen markets (i.e., funds not currently matched by an opposing side).
+
+## Parameters
+
+| Parameter                           | Value                                |
+| ----------------------------------- | ------------------------------------ |
+| Security Parameter                  | 2                                    |
+| Burn Share                          | $\frac{1}{5}$                        |
+| k                                   | 5                                    |
+| Time Limit                          | 7 weeks                              |
+| Market Creator Bond / Start Deposit | 1 / 11 000 000 * 100 % of REP Supply |
+| Fork Theshold                       | 2.5% of REP Supply                   |
+| Number of Immune Markets            | 3                                    |
+| Freeze Threshold                    | 3 × Fork Threshold                   |
