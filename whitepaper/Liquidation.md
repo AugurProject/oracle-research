@@ -72,10 +72,18 @@ When the price crosses a bucket boundary:
 
 If price remains within a bucket, no updates are necessary. Prices can be bucketed using Uniswap-style ticks:
 
-```
-sqrtPriceX96 = sqrt(1.0001^tick) * 2^96
+```math
+\text{sqrtPriceX96} = \sqrt{1.0001^{\text{tick}}} * 2^{96}
 ```
 
 ![image](./images/price_ticks.png)
 
 Since liquidation monitoring doesn't require extremely fine-grained precision, we can use coarser tick intervals. This reduces the frequency of tick crossings, lowering gas costs for updates. While Uniswap uses a maximum tick spacing of 0.01% (1 basis point), we can use a tick spacing of 100, which provides tick accuracy of 1%.
+
+
+## Parameters
+
+| Parameter                     | Value                  |
+| ----------------------------- | ---------------------- |
+| Security Parameter            | 2                      |
+| Burn Rate                     | ?                      |
