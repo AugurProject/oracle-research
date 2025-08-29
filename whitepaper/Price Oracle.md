@@ -129,7 +129,7 @@ $$
 \text{Previous Contract Stake}_{ETH} > 55 \cdot \text{Gas Fee}
 $$
 
-This means we need to require this from the initial staker ($\text{Initial Stake}_{ETH}>55 \cdot \text{Gas Fee}$), and all the future stakes should be higher than this, and should be profitable to be price corrected.
+This means we need to require this from the initial staker ($\text{Initial Stake}_{ETH}>55 \cdot \text{Gas Fee}$), and all the future stakes should be higher than this, and should be profitable to be price corrected. Its good to keep in mind, that this accounts only for gas costs to arbitrage the price up, but we should require higher price than this as there's other costs (jump cost and capital lockup cost) for the reporter.
 
 ## Delaying oracle cost
 The oracle can be griefed by delaying its resolution. The worst case is to report on the oracle at the last block for every period, this costs per 10 blocks (depending on which side is being swapped):
@@ -151,13 +151,21 @@ We have an oracle that grants the following bounty if the price has moved enough
 
 Here we can estimate the initial term quite accurately, as we have access to $\text{Base Fee}$ and $\text{Gas Amount}$, we can also estimate the Correct price to be either what it used to be (and then pad it), or as the value the oracle resolves to. However, estimating the $\text{Jump Cost}$ is harder, this cost is the risk that the price moves and while the user reports the price correctly, the price ends up moving within 10 next blocks. We also should account for capital lockup cost, as during the first rounds before the escalation halt is reached, the participants need to lockup capital up to 10 blocks.
 
+One way to determine for $\text{Initial Reporter Bounty}$ completely, is to start offering:
+
+```math
+\text{Initial Reporter Bounty} = e^{\text{Ramp Up}\cdot \text{Blocks}}
+```
+
+where $\text{Blocks}$ increases everytime no oracle report is being made. This algorithm would find the correct bounty eventually if there's atleast two non-colluding price reporters. We could run this once a day to get one price for every day. One big downside is that if the price moves a lot, we only get updated once a day. It would be preferred to only get update when price has changed, and no update when it has not.
+
 ## Parameters:
 
-| Parameter          | Value            |
-| ------------------ | ---------------- |
-| Protocol Fee       | 4%               |
-| Oracle Accuracy    | 6%               |
-| Settlement Window  | 10 blocks        |
-| Escalation         | 10%              |
-| Escalation Halt    | x% of REP Supply |
-| Time Until Stale   | 1000 blocks      |
+| Parameter          | Value              |
+| ------------------ | ------------------ |
+| Protocol Fee       | 4%                 |
+| Oracle Accuracy    | 6%                 |
+| Settlement Window  | 10 blocks          |
+| Escalation         | 10%                |
+| Escalation Halt    | 0.1% of REP Supply |
+| Time Until Stale   | 1000 blocks        |
