@@ -146,10 +146,10 @@ The costs raises exponentially until $\text{Escalation Halt}$ is reached, then i
 
 We have an oracle that grants the following bounty if the price has moved enough:
 ```math
-\text{Oracle Bounty} = \text{Base Fee Multiplier} \cdot \text{Base Fee} \cdot \text{Oracle Report Gas Cost} + \text{Jump Cost}
+\text{Initial Reporter Bounty} = \text{Base Fee} \cdot \text{Gas Amount}\cdot\text{Correct Price}_{REP/ETH} + \text{Jump Cost} + \text{Capital Lockup Cost}
 ```
 
-We also need to decide on initial values for stakes: $\text{Initial ETH Stake}$ and $\text{Initial Rep Stake}$. These need to be high enough that the disputer can profit of them if they are set incorrectly.
+Here we can estimate the initial term quite accurately, as we have access to $\text{Base Fee}$ and $\text{Gas Amount}$, we can also estimate the Correct price to be either what it used to be (and then pad it), or as the value the oracle resolves to. However, estimating the $\text{Jump Cost}$ is harder, this cost is the risk that the price moves and while the user reports the price correctly, the price ends up moving within 10 next blocks. We also should account for capital lockup cost, as during the first rounds before the escalation halt is reached, the participants need to lockup capital up to 10 blocks.
 
 ## Parameters:
 
@@ -161,33 +161,3 @@ We also need to decide on initial values for stakes: $\text{Initial ETH Stake}$ 
 | Escalation         | 10%              |
 | Escalation Halt    | x% of REP Supply |
 | Time Until Stale   | 1000 blocks      |
-
-if $\text{Previous Contract Stake}_{ETH}\cdot\text{Oracle Accuracy} < \text{Previous Contract Stake}_{REP} \cdot\frac{ETH}{REP}$
-```math
-\text{Profit}_{ETH} = \text{Previous Contract Stake}_{REP}\cdot\frac{ETH}{REP}\cdot(1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}
-```
-->
-$$
-\text{Previous Contract Stake}_{REP} > \frac{\text{Previous Contract Stake}_{ETH} \cdot (1 + \text{Protocol Fee}) + \text{Gas Fee}}{\frac{ETH}{REP} \cdot (1 - \text{Protocol Fee})}
-$$
-
-
-
-
-if $\text{Previous Contract Stake}_{ETH}/\text{Oracle Accuracy} > \text{Previous Contract Stake}_{REP} \cdot\frac{ETH}{REP}$
-```math
-\text{Profit}_{ETH} = \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{REP}\cdot (1 + \text{Protocol Fee})/\text{Correct Price}_{REP/ETH}- \text{Gas Fee}
-```
-->
-$$
-\text{Previous Contract Stake}_{REP} \; < \; \frac{\text{Correct Price}_{REP/ETH}}{1 + \text{Protocol Fee}} \cdot \big( \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Gas Fee} \big)
-$$
-
-
-How should I set $\text{Previous Contract Stake}_{REP}$, to make either of these profits positive when the if criteria is met?
-
-
-
-```math
-\text{Profit}_{ETH} = max(\text{Previous Contract Stake}_{REP}\cdot(1 - \text{Protocol Fee})/\text{Correct Price}_{REP/ETH} - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}, \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{REP}\cdot (1 + \text{Protocol Fee})/\text{Correct Price}_{REP/ETH}- \text{Gas Fee})
-```
