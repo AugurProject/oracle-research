@@ -1,163 +1,193 @@
-
 # Price Oracle
-The PLACEHOLDER needs a reliable $\frac{REP}{ETH}$ price oracle for four purposes:
-1) The Escalation Game needs to know how much the Open Interest is worth in REP, to know how much Open Interest is being forcefully locked out from withdrawing because of a delay
-2) The Security Pools have a Local Security Bond minting check:
+
+The Price Oracle PLACEHOLDER uses is heavily based on the [Open Oracle Design](https://ethresear.ch/t/proposal-for-a-trust-minimized-price-oracle/22971). 
+
+Open Oracle is an optimistic oracle that allows participants to submit price reports for a token pair (here REP/ETH) and disputes can be raised within a settlement window (10 blocks) if a report is deemed inaccurate. We assume that an Ethereum validator cannot censor 10 blocks in a row to timeout the oracle, making the price oracle to resolve into wrong price.
+
+The system involves three stages:
+1) **Report creation** - The protocol initiates a query for the market to find the correct REP/ETH price. The protocol posts a bounty of $\text{Initial Reporter Bounty}$
+2) **Initial report submission** - The first reporter submits their report on the price by submiting ($\text{Initial Rep Stake}$ of REP and $\text{Initial ETH Stake}$) of ETH, where the price is implied by the ratio of these.
+3) **Dispute mechanism** - Other participants can dispute the report by submitting a better price by swapping against previous disputer and posting escalated amount of money at stake (up to ).
+4) **Timeout** - If no disputes are posted after 10 blocks (dispute window), the oracle ends and the final price is reported. The final disputers stake is returned to them.
+
+## Initial reporter
+The Price Oracle work in a way that first initial reporter posts REP and ETH stakes ($\text{Initial Stake}_{REP}$ and $\text{Initial Stake}_{ETH}$) on the oracle such that:
 ```math
-\text{Security Bonds Minted} \leq \frac{\text{Security Deposit}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
+\text{Initial Implied Price}_{REP/ETH} = \frac{\text{Initial Stake}_{REP}}{\text{Initial Stake}_{ETH}}
 ```
-3) The Security Pools have a Global Security Bond minting check:
+The initial reporter is paid $\text{Initial Reporter Bounty}$ in REP as reward to do this report. 
+
+If no-one disputes the initial reporter, the initial reporter makes profit of:
 ```math
-\text{Total Security Bonds Minted} \leq \frac{\text{REP Supply}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
-```
-4) The liquidation protocol attempts to enforce Local Security Bond limit for each Security pool:
-```math
-\text{Health Factor} = \frac{\text{Staked REP} \cdot \text{Security Multiplier}}{\text{Security Bonds Issued} \cdot \text{Price}_{REP/ETH}} ≥ 1
-```
-
-An attacker can exploit a price oracle by artificially moving the reported price either downwards or upwards.
-
-1) If the attacker drives the $\frac{REP}{ETH}$ price **very low**, they can:
-	- Delay the Escalation Game at a lower cost
-	- Prevent Security Pools from minting additional Security Bonds
-	- Trigger bleeding liquidation across all Security Pools
-2) If the attacker drives the $\frac{REP}{ETH}$ price **very high**, they can:
-	- Make it more difficult to trigger a fork, since funds must be raised faster
-	- Enable Security Pools to mint unsafe amounts of Security Bonds
-
-This means we need a price oracle that is accurate to within [-50%, +100%] relative error (defined by the Security Parameter).
-
-## Price oracle design
-
-We use winsorized geometric mean TWAPs The oracle follows the standard geometric mean TWAP design, with the key modification that the spot prices fed into it are bounded. Specifically, the spot price for each block is winsorized by limiting the tick movement relative to the 10-block TWAP. The allowed range is $[-9116, 9116]$ ticks, which corresponds to a maximum increase of approximately 2.5x or a decrease of about 60%. This bounding mechanism ensures that short-term spot price fluctuations cannot exceed predefined limits, thereby constraining their influence on the TWAP.
-
-Standard TWAP is defined as follows:
-```math
-\text{TWAP}_{REP/ETH} = \prod_{i=0}^n{\text{price}_i}^\frac{1}{n}=1.0001^{\frac{1}{n}\sum_{i=0}^n \text{tick}_i}
+\text{Profit}_{ETH} = \text{Initial Reporter Bounty} \cdot \frac{REP}{ETH} - \text{gasFees} 
 ```
 
-Winsorization plays a crucial role in preventing manipulation by Ethereum validators. Without it, a validator could temporarily push the spot price to an extreme level for a single block and then revert it in the following block. This would significantly distort the geometric mean TWAP, while costing the validator only the liquidity provider Pool Fees.
+## Disputing
+The initial report or previous report can be disputed by swapping against the previous reporters balance.
 
-A simple per-block winsorization scheme, which restricts deviations from recent prices, is sufficient to protect against validators controlling one or two sequential blocks (including single-block access through flashbot-style relays). However, if a validator controls a longer consecutive sequence of blocks, the manipulation can accumulate exponentially with each block. To address this, we extend the winsorization reference point to longer horizons (e.g., $\text{Winzoring Comparison Blocks } = 10$ blocks). This design increases the difficulty of an attack, since an adversary must control a substantially larger fraction of blocks to succeed.
+The disputer has to send following amounts to the contract:
 
-Even with these defenses, the security of the oracle ultimately relies on the assumption that Ethereum validators remain sufficiently decentralized, and that no single entity controls a large enough share of the network to mount such attacks.
+Depending on which token the disputer wants to send to initial reporter/previous disputer, the disputer sends following balances to the contract:
+| Swap Token | $\text{Amount To Send}_{ETH}$ | $\text{Amount To Send}_{REP}$ |
+| ------------- | ------------- | ------------- |
+| ETH  | $\text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH}$ | $\text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP}$ |
+| REP  | $\text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH}$ | $\text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP}$|
 
-## Non-validator manipulation
+If $\text{Amount To Send}$s are negative, they sender gets a refund by the amount and does not need to send any of that token.
 
-Non-validators can manipulate the price Pool Feed by temporarily pushing the pool price away from its fair value. Arbitragers then restore the price in the following block. This process causes the oracle to record an artificially inflated spot price.
-
-Since arbitragers correct the price each block, the attacker must repeatedly spend capital to maintain the manipulation. The cost of this attack is incurred continuously, block by block.
-
-Assuming all liquidity is provided across the full range, the cost of manipulating the price for a single block is:
-
-$$
-\text{Single Block Cost} = \text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
-$$
-
-In this attack, the manipulator swaps ETH into the pool to push the price, receiving REP in return. The REP is valued according to the pool’s original (pre-manipulation) price. Arbitragers then step in and trade the price back to its fair level.
-
-Even though the price is corrected, the TWAP oracle records the manipulated price as the spot price for that block.
-
-Now, suppose the manipulator repeats this action every block of the TWAP window, shifting the price by the same amount each time. This creates a sustained distortion in the oracle-reported average price, at the cost of paying for the manipulation in each block.
-
+If swap token is ETH, we send ETH to the previous reporter, and REP otherwise: 
 ```math
-\text{Manipulation Cost}_{ETH} = \text{TWAP Length}
-\cdot
-\text{ETH}_{Pool} \cdot \frac{\text{Pool Fee} \cdot \left( 1.0001^\text{Per Block Tick Manipulation}  - 1 \right)}{(1 - \text{Pool Fee}) \left( 1 + 1.0001^\text{Per Block Tick Manipulation}  \right)}
-```
-To pump the REP/ETH price by $\text{Total Manipulation Amount}$($1.0001^\text{Per Block Tick Manipulation}$) percentage for TWAP of length $\text{TWAP length}$ Article [TWAP Oracle Attacks: Easier Done than Said?](https://eprint.iacr.org/2022/445.pdf) goes throught the derivation of this equation.
-
-### Profiting from manipulation
-
-Let's assume the attacker is able to manipulate the price to be higher than Security Parameter, acquire false tokens for all this open interest for free (for simpler analysis) fork the system for free (for simpler analysis) and then migrate their share of Open Interest to lying universe and then pocket this excess while losing the REP in process:
-
-```math
-\text{Attack Revenue} = \text{Open Interest} - \text{REP migrated} / \frac{REP}{ETH}
-```
-Let's assume the attacker also controls all the REP, and we get:
-```math
-\text{Attack Revenue} = \frac{\text{REP Market Cap}}{\text{Security Parameter}}\cdot {\text{Total Manipulation Amount}} - \text{REP Market Cap}
+\text{Amount To Send Previous Reporter}_{token} = \text{Previous Contract Stake}_{token}
 ```
 
-This simplifies to:
+The previous participant then in total receives double amount of this token:
 ```math
-\text{Attack Revenue} = \text{REP Market Cap} \left( \frac{\text{Total Manipulation Amount}}{\text{Security Parameter}} - 1\right).
+\begin{array}{l}
+\text{Previous Reporter Gain}_{Token} = 2 \cdot \text{Previous Contract Stake}_{Token} \\
+\text{Previous Reporter Gain}_{\text{Other Token}} = 0
+\end{array}
 ```
 
-The attack is profitable whenever
-
-$$
-\text{Attack Revenue} > \text{Manipulation Cost}_{ETH}
-$$
-
-If the attacker pushes the price toward infinity, i.e.
-
-$$
-\text{Total Manipulation Amount} \to \infty,
-$$
-
-then the revenue from the attack grows linearly ($\text{Attack Revenue} \sim \text{Total Manipulation Amount}$) with the manipulation amount, while the cost only increases proportionally to the square root of the manipulation amount ($\text{Manipulation Cost} \sim \sqrt{\text{Total Manipulation Amount}}$). The revenue will eventually outpace the cost, ensuring profitability at sufficiently large manipulations.
-
-For this reason, instead of relying on the TWAP price to determine whether new open interest can be minted (both locally and globally), and instead of taking the last spot price in a block as the oracle price, we use the minimum REP/ETH price observed within a block for the TWAP.
-
-This approach ensures that even a single arbitrager interacting with the pool can restore the price to its fair value, preventing upward manipulation from being recorded by the oracle.
-
-The trade-off is that downward manipulation remains possible. An attacker can repeatedly push the price lower, paying only the liquidity provider Pool Fees each time. By doing so, they could censor the protocol by preventing the creation of additional open interest. However, this attack can be mitigated: defenders can counteract it by adding more liquidity to the pool, increasing the cost of sustained downward manipulation.
-
-## Liquidity required to enable arbitrage
-
-The oracle’s correctness depends on arbitragers being able to restore fair prices. Whenever the oracle records a mispriced value, an arbitrager should have the opportunity to step in and profit by trading against the pool.
-
-If we assume that performing an arbitrage trade costs $\text{Arbitrage Cost}$ ETH (e.g., from Ethereum gas Pool Fees), then the oracle’s pool must contain at least the following minimum liquidity to make arbitrage economically viable:
-
-$$
-L \ge 
-\frac{ \text{Arbitrage Cost} \cdot 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} \cdot \sqrt{\text{Pool Price}_{REP/ETH}} }{ 1.0001^{\tfrac{\text{Tracking Accuracy Ticks}}{2}} - 1 }
-\cdot 
-\frac{ (1 - \text{Pool Fee}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} }{ (1 - \text{Pool Fee}) \cdot 1.0001^{\text{Tracking Accuracy Ticks}} - 1 }
-$$
-
-Where $\text{Tracking Accuracy Ticks}$ is the amount of deviation in ticks we allow the pool to have. This is $2L\sqrt{REP/ETH}$ worth of ETH (both REP and ETH side liquidity combined). This means that the liquidity requirement does not actually depend on the price:
-
-$$
-\text{Liquidity in ETH} \ge 2 \cdot \frac{\text{Arbitrage Cost}\cdot 1.0001^{\text{Tracking Accuracy Ticks}/2} (1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}}}{ (\sqrt{1.0001^{\text{Tracking Accuracy Ticks}}} - 1) ((1 - \text{Pool Fee}) 1.0001^{\text{Tracking Accuracy Ticks}} - 1) }
-$$
-
-However, our liquidity's value change depending on the price:
+The contract is then left with $\text{New Contract REP Stake}$ REP and $\text{New Contract ETH Stake}$ ETH, with implied price:
 ```math
-\text{New liquidity in ETH} = \text{Previous Liquidity in ETH}\cdot\sqrt{\max(\frac{1}{\text{Relative Price Change}}, \text{Relative Price Change})}
+\text{New Implied Price}_{REP/ETH} = \frac{\text{New Contract REP Stake}}{\text{New Contract ETH Stake}}
 ```
 
-We want to support some change of price here, eg $\text{Relative Price Change} = 5$, meaning we need to have `2.23` times more liquidity, than with constant price.
-
-Arbitrage Cost can be estimated to be:
-
+We also require the REP stake is increased by $\text{Escalation}$ amount uness we have reached the Escalation Halt where we don't increase the stake in the contract.
 ```math
-\text{Arbitrage Cost} = 2 \cdot \text{Gas Uncertainty Multiplier} \cdot \text{Base Pool Fee} \cdot \text{Worst Case Swap Gas}
+\text{New Contract REP Stake} = \min(\text{Escalation Halt}, \text{Previous Contract REP Stake}\cdot(1+\text{Escalation}) )
 ```
 
-Here `2` is used to assume the arbitrager sources the funds from similar exchange and it costs the same to do swap there.
+The fees are calculated based on the previous balances:
+```math
+\begin{array}{l}
+\text{Fee}_{REP} = \text{Previous Contract REP Stake}\cdot \text{Protocol Fee} \\
+\text{Fee}_{ETH} = \text{Previous Contract ETH Stake}\cdot \text{Protocol Fee}
+\end{array}
+```
 
-## Funding price oracle
-The price oracle needs to be funded to track the price. We also need to ensure the price oracle is funded after fork
+These fees will go directly to the Augur.
 
-Here's some ideas on how it could be funded
-1) Its not funded, but the whole system freezes if there's not enough liquidity
-2) If the system detects the system is underwater, an auction is held to purchase full range liquidity tokens for the pool
-3) Security Pools need to hold a position in the oracle
+### Disputing profit
+
+#### ETH Side
+If $\text{Correct Price}_{REP/ETH}\cdot \text{Oracle Accuracy} < \text{Previous Implied Price}_{REP/ETH}$, the disputer should use ETH to swap, the profit that last disputer gets is:
+```math
+\text{Profit}_{ETH} = \frac{\text{Previous Contract Stake}_{REP}}{\text{Correct Price}_{REP/ETH}} - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}
+```
+
+We can then compute when this is profitable:
+```math
+\frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} > (1+\text{Protocol Fee}) + \frac{\text{Gas Fee}}{\text{Previous Contract Stake}_{ETH}}
+```
+
+#### REP Side
+If $\text{Correct Price}_{REP/ETH} > \text{Previous Implied Price}_{REP/ETH}\cdot \text{Oracle Accuracy}$, the disputer should use ETH to swap, the profit that last disputer gets is:
+```math
+\text{Profit}_{ETH} = \text{Previous Contract Stake}_{ETH} - \text{Previous Contract Stake}_{REP}\cdot \frac{(1 + \text{Protocol Fee})}{\text{Correct Price}_{REP/ETH}}- \text{Gas Fee}
+```
+And this is profitable When:
+$$
+\frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} < \frac{1 - \text{Gas Fee}/\text{Previous Contract Stake}_{ETH}}{1+\text{Protocol Fee}}
+$$
+
+We can calculate minima values for contract stakes from these, to ensure that if the oracle is misprised, the next reporter can profit:
+```math
+\begin{array}{l}
+\text{Previous Contract Stake}_{ETH} > \frac{\text{Gas Fee}}{\frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} - (1+\text{Protocol Fee})} \\
+\text{Previous Contract Stake}_{ETH} \;>\; \frac{\text{Gas Fee}}{\,1 - \dfrac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} \bigl(1 + \text{Protocol Fee}\bigr)\,}
+\end{array}
+```
+
+We need either of these to be true if the price has deviated enough, thus we get:
+```math
+\text{Previous Contract Stake}_{ETH} \;>\; \text{Gas Fee} \cdot 
+\min\Bigg(
+\frac{1}{\frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} - (1 + \text{Protocol Fee})},\;
+\frac{1}{1 - \frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} \bigl(1 + \text{Protocol Fee}\bigr)}
+\Bigg)
+```
+
+We can also use:
+```math
+\text{Relative Price Correction} = \frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}}
+```
+
+and get
+
+```math
+\text{Previous Contract Stake}_{ETH} \;>\; \text{Gas Fee} \cdot 
+\min\Bigg(
+\frac{1}{\text{Relative Price Correction} - (1 + \text{Protocol Fee})},\;
+\frac{1}{1 - \text{Relative Price Correction} \bigl(1 + \text{Protocol Fee}\bigr)}
+\Bigg)
+```
+
+From this we get that either $\text{Relative Price Correction}>(1+\text{Protocol Fee})$ or $\text{Relative Price Correction}<\frac{1}{1+\text{Protocol Fee}}$ where the trade is profitable. If we want $\text{Oracle Accuracy}>6\%$ ($\text{Relative Price Correction}>1.06$ or $\text{Relative Price Correction}<\frac{1}{1.06}$>) we get roughly:
+
+$$
+\text{Previous Contract Stake}_{ETH} > 55 \cdot \text{Gas Fee}
+$$
+
+This means we need to require this from the initial staker ($\text{Initial Stake}_{ETH}>55 \cdot \text{Gas Fee}$), and all the future stakes should be higher than this, and should be profitable to be price corrected.
+
+## Delaying oracle cost
+The oracle can be griefed by delaying its resolution. The worst case is to report on the oracle at the last block for every period, this costs per 10 blocks (depending on which side is being swapped):
+```math
+\begin{array}{l}
+\text{Delay Cost}_{ETH} = \frac{\min(\text{Escalation Halt}, \text{Previous Contract Stake}_{REP}\cdot(1+\text{Escalation}) )}{\text{Correct Price}_{REP/ETH}}\cdot \text{Protocol Fee} \\
+\text{Delay Cost}_{REP} = \min(\text{Escalation Halt}, \text{Previous Contract Stake}_{REP}\cdot(1+\text{Escalation}) )\cdot \text{Protocol Fee}
+\end{array}
+````
+
+The costs raises exponentially until $\text{Escalation Halt}$ is reached, then it stays constant. The PLACEHOLDER is okay for some delay, however, if $\text{Time Until Stale}$ has passed since we have gotten a fair price, PLACEHOLDER refuses to mint more open interest until new price is reached.
+
+## Determining Initial Reporter Bonus
+
+We have an oracle that grants the following bounty if the price has moved enough:
+```math
+\text{Oracle Bounty} = \text{Base Fee Multiplier} \cdot \text{Base Fee} \cdot \text{Oracle Report Gas Cost} + \text{Jump Cost}
+```
+
+We also need to decide on initial values for stakes: $\text{Initial ETH Stake}$ and $\text{Initial Rep Stake}$. These need to be high enough that the disputer can profit of them if they are set incorrectly.
+
+## Parameters:
+
+| Parameter          | Value            |
+| ------------------ | ---------------- |
+| Protocol Fee       | 4%               |
+| Oracle Accuracy    | 6%               |
+| Settlement Window  | 10 blocks        |
+| Escalation         | 10%              |
+| Escalation Halt    | x% of REP Supply |
+| Time Until Stale   | 1000 blocks      |
+
+if $\text{Previous Contract Stake}_{ETH}\cdot\text{Oracle Accuracy} < \text{Previous Contract Stake}_{REP} \cdot\frac{ETH}{REP}$
+```math
+\text{Profit}_{ETH} = \text{Previous Contract Stake}_{REP}\cdot\frac{ETH}{REP}\cdot(1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}
+```
+->
+$$
+\text{Previous Contract Stake}_{REP} > \frac{\text{Previous Contract Stake}_{ETH} \cdot (1 + \text{Protocol Fee}) + \text{Gas Fee}}{\frac{ETH}{REP} \cdot (1 - \text{Protocol Fee})}
+$$
 
 
-## Parameters
 
-| Parameter                     | Value                  |
-| ----------------------------- | ---------------------- |
-| Relative Price Change         | 5                      |
-| Gas Uncertainty Multiplier    | 4                      |
-| Worst Case Swap Gas           | ?                      |
-| Tracking Accuracy Ticks       | 1000                   |
-| Pool Fee                      | 2% (includes all fees) |
-| Security Parameter            | 2                      |
-| Tick-spacing                  | 200                    |
-| Winzoring Range               | $[-9116, 9116]$ ticks  |
-| Winzoring Comparison          | 10 blocks              |
-| TWAP Length                   | 1 day                  |
+
+if $\text{Previous Contract Stake}_{ETH}/\text{Oracle Accuracy} > \text{Previous Contract Stake}_{REP} \cdot\frac{ETH}{REP}$
+```math
+\text{Profit}_{ETH} = \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{REP}\cdot (1 + \text{Protocol Fee})/\text{Correct Price}_{REP/ETH}- \text{Gas Fee}
+```
+->
+$$
+\text{Previous Contract Stake}_{REP} \; < \; \frac{\text{Correct Price}_{REP/ETH}}{1 + \text{Protocol Fee}} \cdot \big( \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Gas Fee} \big)
+$$
+
+
+How should I set $\text{Previous Contract Stake}_{REP}$, to make either of these profits positive when the if criteria is met?
+
+
+
+```math
+\text{Profit}_{ETH} = max(\text{Previous Contract Stake}_{REP}\cdot(1 - \text{Protocol Fee})/\text{Correct Price}_{REP/ETH} - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}, \text{Previous Contract Stake}_{ETH} \cdot (1 - \text{Protocol Fee}) - \text{Previous Contract Stake}_{REP}\cdot (1 + \text{Protocol Fee})/\text{Correct Price}_{REP/ETH}- \text{Gas Fee})
+```
