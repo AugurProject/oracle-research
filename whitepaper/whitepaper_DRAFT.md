@@ -47,6 +47,10 @@ PLACEHOLDER's design is based on a set of core assumptions. While the system inc
 - Keepers
 - Market Makers
 - REP/ETH traders
+- Escalation Game Participants
+- Auction Participants
+- Price Oracle Stakers
+- Price Orace Arbitragers
 
 ## Creating Prediction Markets
 Anyone can create a prediction market on PLACEHOLDER. To create a market you need to
