@@ -66,7 +66,7 @@ The fees are calculated based on the previous balances:
 \end{array}
 ```
 
-These fees will go directly to the Augur.
+These fees will go directly to the PLACEHOLDER.
 
 ### Disputing profit
 
@@ -142,30 +142,53 @@ The oracle can be griefed by delaying its resolution. The worst case is to repor
 
 The costs raises exponentially until $\text{Escalation Halt}$ is reached, then it stays constant. The PLACEHOLDER is okay for some delay, however, if $\text{Time Until Stale}$ has passed since we have gotten a fair price, PLACEHOLDER refuses to mint more open interest until new price is reached.
 
-## Determining Initial Reporter Bonus
+## Determining the Initial Reporter Bounty
 
-We have an oracle that grants the following bounty if the price has moved enough:
-```math
-\text{Initial Reporter Bounty} = \text{Base Fee} \cdot \text{Gas Amount}\cdot\text{Correct Price}_{REP/ETH} + \text{Jump Cost} + \text{Capital Lockup Cost}
-```
-
-Here we can estimate the initial term quite accurately, as we have access to $\text{Base Fee}$ and $\text{Gas Amount}$, we can also estimate the Correct price to be either what it used to be (and then pad it), or as the value the oracle resolves to. However, estimating the $\text{Jump Cost}$ is harder, this cost is the risk that the price moves and while the user reports the price correctly, the price ends up moving within 10 next blocks. We also should account for capital lockup cost, as during the first rounds before the escalation halt is reached, the participants need to lockup capital up to 10 blocks.
-
-One way to determine for $\text{Initial Reporter Bounty}$ completely, is to start offering:
+The oracle provides a bounty to the initial reporter if the price has moved sufficiently. The bounty can be expressed as:
 
 ```math
-\text{Initial Reporter Bounty} = e^{\text{Ramp Up}\cdot \text{Blocks}}
+\text{Initial Reporter Bounty} = \text{Base Fee} \cdot \text{Gas Amount} \cdot \text{Correct Price}_{REP/ETH} + \text{Jump Cost} + \text{Capital Lockup Cost}
 ```
 
-where $\text{Blocks}$ increases everytime no oracle report is being made. This algorithm would find the correct bounty eventually if there's atleast two non-colluding price reporters. We could run this once a day to get one price for every day. One big downside is that if the price moves a lot, we only get updated once a day. It would be preferred to only get update when price has changed, and no update when it has not.
+We can estimate the first term with reasonable accuracy since the Base Fee and Gas Amount are known. The Correct Price can be estimated either as the previous price (with some padding) or as the resolved oracle value.
+
+However, estimating the Jump Cost is more challenging. This represents the risk that, although the user reports the price correctly, the price may move significantly within the next 10 blocks. Additionally, we must consider the Capital Lockup Cost, which accounts for the capital participants need to lock during the initial rounds before the escalation halt is reached (up to 10 blocks). The oracle participants also need to havean easy access to REP and ETH in order to be able to participate in the oracle reporting.
+
+A practical approach to determining the whole Initial Reporter Bounty is a dynamic strategy:
+
+```math
+\text{Initial Reporter Bounty} = \text{Start Bounty} + e^{\text{Ramp Up} \cdot \text{Delta Blocks}}
+```
+
+Here, Delta Blocks increments for each block each time no oracle report occurs. This algorithm will eventually converge to an appropriate bounty, assuming at least two non-colluding price reporters. This method can be run once per day to obtain a daily price. 
+
+Once report happens, we record at what price the report happened, and store half of it as start bounty for next oracle query: $\text{\text{Start Bounty}} = \frac{\text{Initial Reporter Bounty}}{2}$. This guarrantees we don't need to search for the price for too long to get reply next time.
+
+A notable downside is that if the price changes frequently, updates occur only once per day. Ideally, the system should update the bounty only when the price changes and remain idle when the price is stable.
+
+## Initial Reporter Bounty based on price change
+
+```math
+\text{Initial Reporter Bounty} = \text{Last Paid Bounty Without Gas Fees} + \text{Base Fee} \cdot \text{Gas Amount} \cdot \text{Oracle Price}_{REP/ETH} + \text{Price Reward(Price Deviation)}
+```
+
+where
+```math
+\text{PriceDeviation} = \max(\frac{\text{Oracle Price}_{REP/ETH}}{\text{Previous Oracle Price}_{REP/ETH}},\frac{\text{Previous Oracle Price}_{REP/ETH}}{\text{Oracle Price}_{REP/ETH}})
+```
+
+```math
+\text(Price Reward(PriceDeviation)) = \frac{\text{PriceDeviation}}{\text{Oracle Accuracy}}
+```
 
 ## Parameters:
 
-| Parameter          | Value              |
-| ------------------ | ------------------ |
-| Protocol Fee       | 4%                 |
-| Oracle Accuracy    | 6%                 |
-| Settlement Window  | 10 blocks          |
-| Escalation         | 10%                |
-| Escalation Halt    | 0.1% of REP Supply |
-| Time Until Stale   | 1000 blocks        |
+| Parameter              | Value              |
+| ---------------------- | ------------------ |
+| Protocol Fee           | 4%                 |
+| Oracle Accuracy        | 6%                 |
+| Settlement Window      | 10 blocks          |
+| Escalation             | 10%                |
+| Escalation Halt        | 0.1% of REP Supply |
+| Time Until Stale       | 1000 blocks        |
+| Oracle Query Frequency | 1 day              |
