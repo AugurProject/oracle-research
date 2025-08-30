@@ -28,7 +28,7 @@ PLACEHOLDER's design is based on a set of core assumptions. While the system inc
 6. **Access to information**: Users should have reliable and timely access to information in order to determine the most truthful outcome of a market.
 7. **Migrating is not too hard**: Users, exchanges and other tools using the systems are okay to migrate into fork they believe is truthful.
 8. **An auction is an efficient way to convert an asset into another**: Some amount of truthfull Reputation tokens can be sold for ETH lost in a fork for a reasonable fee.
-9. **Traders Hold Reputation tokens**: Traders hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market.
+9. **Traders Hold Reputation tokens**: Traders (in aggregate for a given market) hold enough REP to delay wrongly reported markets enough so that participants with more REP are alerted to continue disputing the market.
 10. **Reputation is liquid**: REP token is liquid enough that reasonable amounts of it can be accessed from open market.
 11. **The inequality is maintained**: The system is able to maintain inequality at all times: $$\text{Open Interest} < \text{REP's Discounted Cash Flow}$$
 12. **Access to PLACEHOLDER is valuable**: Users find it valuable to be able to use PLACEHOLDER to access prediction markets and this value is atleast $\text{Security Parameter}$ times higher than the value it secures.
@@ -215,3 +215,4 @@ Security Pools security bond debt is cleared when market is finalized and the de
 # Todo's
 - add maximium market length
 - write about unclear markets
+
