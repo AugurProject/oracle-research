@@ -86,7 +86,7 @@ TODO: What to do with the ETH claimed? It can be useful to burn this, but it mig
 If
 
 ```math
-\text{Correct Price}_{REP/ETH}\cdot \text{Oracle Accuracy} < \text{Previous Implied Price}_{REP/ETH},
+\text{Correct Price}_{REP/ETH} < \frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Oracle Accuracy}},
 ```
 the disputer should use ETH to swap, the profit that last disputer gets is:
 ```math
@@ -205,10 +205,9 @@ We can express the bounty as:
 \text{Initial Reporter Bounty} = \text{Base Fee} \cdot \text{Gas Amount} \cdot \text{Correct Price}_{REP/ETH} + \text{Jump Cost} + \text{Capital Lockup Cost}
 ```
 
-* The first term can be estimated accurately, since both `Base Fee` and `Gas Amount` are known (aside from future EVM changes, which can still be calculated on-chain).
-* The `Correct Price` can be approximated using either the previous resolved oracle price (with a buffer) or the most recent settlement price.
-* The challenging parts are estimating `Jump Cost` and `Capital Lockup Cost`:
-
+* The first term can be estimated accurately, since both Base Fee and Gas Amount are known (aside from future EVM changes, which can still be calculated on-chain).
+* The Correct Price can be approximated using either the previous resolved oracle price (with a buffer) or the most recent settlement price.
+* The challenging parts are estimating Jump Cost and Capital Lockup Cost:
   * **Jump Cost** reflects the risk that the price moves significantly in the 10 blocks following a correct report.
   * **Capital Lockup Cost** accounts for capital tied up during the early escalation rounds (up to 10 blocks) before resolution.
 
@@ -218,7 +217,7 @@ Additionally, oracle participants must have timely access to both REP and ETH to
 
 We use two complementary approaches to ensure a fair bounty level:
 1. **Exponential Price Controller**
-   If no price update occurs for a defined duration (`Oracle Query Frequency`, e.g. 3 days), the Initial Reporter Bounty increases exponentially until someone reports.
+   If no price update occurs for a defined duration (Oracle Query Frequency, e.g. 3 days), the Initial Reporter Bounty increases exponentially until someone reports.
 2. **Big Enough Price Change Controller**
    Anyone can trigger a price update at any time. The bounty they receive depends on how much the price has changed since the last report (finalized when the query resolves).
 
@@ -231,13 +230,13 @@ When the oracle has not updated for a sufficient number of blocks, the bounty gr
 \text{Initial Reporter Bounty} = \frac{\text{Previous Initial Reporter Bounty}}{2}\cdot 2^{\text{Exponential Ramp Up} \cdot \text{Delta Blocks}}
 ```
 
-Here, `Delta Blocks` increments each block without an oracle update. This ensures the bounty eventually reaches an attractive level, assuming at least two non-colluding price reporters. We also use:
+Here, Delta Blocks increments each block without an oracle update. This ensures the bounty eventually reaches an attractive level, assuming at least two non-colluding price reporters. We also use:
 
 ```math
 \text{Exponential Ramp Up} = \frac{13}{3600}
 ```
 
-This ensures the $\text{Initial Reporter Bounty}$ gets doubled once a hour.
+This ensures the $\text{Initial Reporter Bounty}$ doubles every hour.
 
 Once a report is submitted, the bounty level at which it triggered is recorded and used as a reference for future queries. This prevents prolonged waiting for updates in the future.
 
@@ -255,7 +254,7 @@ First, we compute the reporter’s **net bounty in ETH terms** from the last upd
 \right)
 ```
 
-Here, the `Oracle Price` is the most recent oracle result.
+Here, the Oracle Price is the most recent oracle result.
 
 Next, any participant can initiate a new query and, upon resolution, receive the following reward in REP:
 
