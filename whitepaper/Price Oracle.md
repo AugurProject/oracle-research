@@ -26,10 +26,11 @@ If no-one disputes the initial reporter, the initial reporter makes profit of:
 The initial report or previous report can be disputed by swapping against the previous reporters balance.
 
 Depending on which token the disputer wants to send to initial reporter/previous disputer, the disputer sends following balances to the contract:
-| Swap Token | $\text{Amount To Send}_{ETH}$ | $\text{Amount To Send}_{REP}$ |
-| ------------- | ------------- | ------------- |
-| ETH  | $$\text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH}$$ | $$\text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP}$$ |
-| REP  | $$\text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH}$$ | $$\text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP}$$ |
+| Swap Token | $ \text{Amount To Send}_{ETH} $ | $ \text{Amount To Send}_{REP} $ |
+|------------|---------------------------------|---------------------------------|
+| ETH        | $ \text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH} $ | $ \text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP} $ |
+| REP        | $ \text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH} $ | $ \text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP} $ |
+
 
 If $\text{Amount To Send}$ are negative, the sender gets a refund by that amount and does not need to send any of that token.
 
@@ -90,7 +91,11 @@ We can then compute when this is profitable:
 ```
 
 #### Swapping REP
-If $\text{Correct Price}_{REP/ETH} > \text{Previous Implied Price}_{REP/ETH}\cdot \text{Oracle Accuracy}$, the disputer should use ETH to swap, the profit the disputer gets is:
+If
+```math
+\text{Correct Price}_{REP/ETH} > \text{Previous Implied Price}_{REP/ETH}\cdot \text{Oracle Accuracy},
+```
+the disputer should use ETH to swap, the profit the disputer gets is:
 ```math
 \text{Profit}_{ETH} = \text{Previous Contract Stake}_{ETH} - \text{Previous Contract Stake}_{REP}\cdot \frac{(1 + \text{Protocol Fee})}{\text{Correct Price}_{REP/ETH}}- \text{Gas Fee}
 ```
