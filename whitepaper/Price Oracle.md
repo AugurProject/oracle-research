@@ -28,8 +28,8 @@ The initial report or previous report can be disputed by swapping against the pr
 Depending on which token the disputer wants to send to initial reporter/previous disputer, the disputer sends following balances to the contract:
 | Swap Token | $\text{Amount To Send}_{ETH}$ | $\text{Amount To Send}_{REP}$ |
 | ------------- | ------------- | ------------- |
-| ETH  | $\text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH}$ | $\text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP}$ |
-| REP  | $\text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH}$ | $\text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP}$|
+| ETH  | $$\text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH}$$ | $$\text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP}$$ |
+| REP  | $$\text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH}$$ | $$\text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP}$$ |
 
 If $\text{Amount To Send}$ are negative, the sender gets a refund by that amount and does not need to send any of that token.
 
@@ -74,7 +74,12 @@ TODO: What to do with the ETH claimed? It can be useful to burn this, but it mig
 ### Disputing profit
 
 #### Swapping ETH
-If $\text{Correct Price}_{REP/ETH}\cdot \text{Oracle Accuracy} < \text{Previous Implied Price}_{REP/ETH}$, the disputer should use ETH to swap, the profit that last disputer gets is:
+If
+
+```math
+\text{Correct Price}_{REP/ETH}\cdot \text{Oracle Accuracy} < \text{Previous Implied Price}_{REP/ETH},
+```
+the disputer should use ETH to swap, the profit that last disputer gets is:
 ```math
 \text{Profit}_{ETH} = \frac{\text{Previous Contract Stake}_{REP}}{\text{Correct Price}_{REP/ETH}} - \text{Previous Contract Stake}_{ETH}\cdot(1 + \text{Protocol Fee}) - \text{Gas Fee}
 ```
@@ -90,9 +95,9 @@ If $\text{Correct Price}_{REP/ETH} > \text{Previous Implied Price}_{REP/ETH}\cdo
 \text{Profit}_{ETH} = \text{Previous Contract Stake}_{ETH} - \text{Previous Contract Stake}_{REP}\cdot \frac{(1 + \text{Protocol Fee})}{\text{Correct Price}_{REP/ETH}}- \text{Gas Fee}
 ```
 And this is profitable When:
-$$
+```math
 \frac{\text{Previous Implied Price}_{REP/ETH}}{\text{Correct Price}_{REP/ETH}} < \frac{1 - \text{Gas Fee}/\text{Previous Contract Stake}_{ETH}}{1+\text{Protocol Fee}}
-$$
+```
 
 We can calculate minima values for contract stakes from these, to ensure that if the oracle is misprised, the next reporter can profit:
 ```math
