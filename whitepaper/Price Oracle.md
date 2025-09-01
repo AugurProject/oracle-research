@@ -30,8 +30,8 @@ Depending on which token the disputer wants to send to initial reporter/previous
 ```math
 \begin{bmatrix}
  & \text{Amount To Send}_{ETH} & \text{Amount To Send}_{REP} \\
-\text{ETH} & \text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH} & \text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP} \\
-\text{REP} & \text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH} & \text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP} 
+\text{ETH} & \text{Previous Reporter Amount}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH} & \text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP} \\
+\text{REP} & \text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH} & \text{Previous Reporter Amount}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP} 
 \end{bmatrix}
 ```
 
@@ -39,7 +39,7 @@ If $\text{Amount To Send}$ are negative, the sender gets a refund by that amount
 
 If swap token is ETH, we send ETH to the previous reporter, and REP otherwise: 
 ```math
-\text{Amount To Send Previous Reporter}_{token} = \text{Previous Contract Stake}_{token}
+\text{Previous Reporter Amount}_{token} = \text{Previous Contract Stake}_{token}
 ```
 
 The previous participant then in total receives double amount of this token:
