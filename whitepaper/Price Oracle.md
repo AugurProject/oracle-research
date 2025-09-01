@@ -26,11 +26,14 @@ If no-one disputes the initial reporter, the initial reporter makes profit of:
 The initial report or previous report can be disputed by swapping against the previous reporters balance.
 
 Depending on which token the disputer wants to send to initial reporter/previous disputer, the disputer sends following balances to the contract:
-| Swap Token | $ \text{Amount To Send}_{ETH} $ | $ \text{Amount To Send}_{REP} $ |
-|------------|---------------------------------|---------------------------------|
-| ETH        | $ \text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH} $ | $ \text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP} $ |
-| REP        | $ \text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH} $ | $ \text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP} $ |
 
+```math
+\begin{bmatrix}
+ & \text{Amount To Send}_{ETH} & \text{Amount To Send}_{REP} \\
+\text{ETH} & \text{Amount To Send Previous Reporter}_{ETH} + \text{New Contract Stake}_{ETH} + \text{Fee}_{ETH} & \text{New Contract Stake}_{REP} - \text{Previous Contract Stake}_{REP} \\
+\text{REP} & \text{New Contract Stake}_{ETH} - \text{Previous Contract Stake}_{ETH} & \text{Amount To Send Previous Reporter}_{REP} + \text{New Contract Stake}_{REP} + \text{Fee}_{REP} 
+\end{bmatrix}
+```
 
 If $\text{Amount To Send}$ are negative, the sender gets a refund by that amount and does not need to send any of that token.
 
