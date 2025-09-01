@@ -221,7 +221,7 @@ We use two complementary approaches to ensure a fair bounty level:
 2. **Big Enough Price Change Controller**
    Anyone can trigger a price update at any time. The bounty they receive depends on how much the price has changed since the last report (finalized when the query resolves).
 
-The oracle only permits one active price query at a time. A new query cannot be started until the previous one has been completed. We also allow the price to increase only by 2x or decrease by 50% after each query ($\text{Max Price Change}$ parameter).
+The oracle only permits one active price query at a time. A new query cannot be started until the previous one has been completed. We also allow the price to increase only by 2x or decrease by 50% in a day ($\text{Max Price Change}$ parameter).
 
 ### Exponential Price Controller
 When the oracle has not updated for a sufficient number of blocks, the bounty grows according to:
@@ -283,7 +283,7 @@ This equation rewards the initiator with
 
 worth of REP (in ETH terms) when the price changes by exactly Oracle Accuracy. The payout then scales linearly with the size of the price change - smaller changes earn less, larger changes earn more.
 
-To avoid runaway growth, we cap the bounty for initiated queries:
+To avoid runaway growth, we cap the bounty for initiated queries (per day):
 
 ```math
 \text{Initial Reporter Bounty} \leq
@@ -305,4 +305,11 @@ This prevents the system from inflating rewards too quickly.
 | Oracle Query Frequency      | 3 day              |
 | Max Initial Bounty Increase | 2                  |
 | Exponential Ramp Up         | $\frac{13}{3600}$  |
-| Max Price Change            | 2                  |
+| Max Price Change            | 2x/day             |
+
+## Future improvements
+- use block time with block number (both)
+- Would it be possible to partially fill rounds so that people with smaller amounts of rep/eth could also participate in later 
+stages?
+- We could probably use Open Oracle directly
+- Gas fee can change, and escalation% should increase to accommodate increased gas costs
