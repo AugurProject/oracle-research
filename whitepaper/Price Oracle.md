@@ -10,16 +10,21 @@ The system involves three stages:
 3) **Dispute mechanism** - Other participants can dispute the report by submitting a better price by swapping against previous disputer and posting escalated amount of money at stake (up to ).
 4) **Timeout** - If no disputes are posted after 10 blocks (settlement window), the oracle finalizes and the final price is reported. The final disputers stake is returned and Initial Reporter Bounty is paid.
 
-## Initial reporter
-The Price Oracle work in a way that first initial reporter posts REP and ETH stakes ($\text{Initial Stake}_{REP}$ and $\text{Initial Stake}_{ETH}$) on the oracle such that:
-```math
-\text{Initial Implied Price}_{REP/ETH} = \frac{\text{Initial Stake}_{REP}}{\text{Initial Stake}_{ETH}}
-```
-The initial reporter is paid $\text{Initial Reporter Bounty}$ in REP as reward to do this report. 
+## Initial Reporting
+## Initial Reporting
 
-If no-one disputes the initial reporter, the initial reporter makes profit of:
+The Price Oracle operates by having an initial reporter submit a price report while staking both REP and ETH. Specifically:
+
 ```math
-\text{Profit}_{ETH} = \text{Initial Reporter Bounty} \cdot \frac{REP}{ETH} - \text{Gas Fees} 
+\text{Initial Implied Price}_{REP/ETH} = \frac{\text{REP Stake}}{\text{ETH Stake}}
+```
+
+As a reward for reporting, the initial reporter receives an **Initial Reporter Bounty** in REP tokens.
+
+If no one disputes the report, the initial reporter earns a profit calculated as:
+
+```math
+\text{Profit}_{ETH} = \text{Initial Reporter Bounty} \cdot \text{REP/ETH Price} - \text{Gas Fees}
 ```
 
 ## Disputing
@@ -45,14 +50,14 @@ If swap token is ETH, we send ETH to the previous reporter, and REP otherwise:
 The previous participant then in total receives double amount of this token:
 ```math
 \begin{array}{l}
-\text{Previous Reporter Gain}_{Token} = 2 \cdot \text{Previous Contract Stake}_{Token} \\
-\text{Previous Reporter Gain}_{\text{Other Token}} = 0
+\text{Previous Reporter Gain}_{Token} &=& 2 \cdot \text{Previous Contract Stake}_{Token} \\
+\text{Previous Reporter Gain}_{\text{Other Token}} &=&0
 \end{array}
 ```
 
 The contract is then left with $\text{New Contract REP Stake}$ REP and $\text{New Contract ETH Stake}$ ETH, with implied price:
 ```math
-\text{New Implied Price}_{REP/ETH} = \frac{\text{New Contract REP Stake}}{\text{New Contract ETH Stake}}
+\text{New Implied Price}_{REP/ETH} = \frac{\text{New Contract Stake}_{REP}}{\text{New Contract Stake}_{ETH}}
 ```
 
 The disputer should select the less valuable token to swap, allowing them to profit by claiming the more valuable one.
@@ -60,7 +65,7 @@ The disputer should select the less valuable token to swap, allowing them to pro
 We also require the REP stake to be increased by the Escalation amount, unless the Escalation Halt has been reached, in which case the contract does not increase the stake.
 
 ```math
-\text{New Contract REP Stake} = \min(\text{Escalation Halt}, \text{Previous Contract REP Stake}\cdot(1+\text{Escalation}) )
+\text{New Contract Stake}_{REP} = \min(\text{Escalation Halt}, \text{Previous Contract Stake}_{REP}\cdot(1+\text{Escalation}) )
 ```
 
 The fees are calculated based on the previous balances:

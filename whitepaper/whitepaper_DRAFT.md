@@ -32,9 +32,10 @@ PLACEHOLDER's design is based on a set of core assumptions. While the system inc
 10. **Reputation is liquid**: REP token is liquid enough that reasonable amounts of it can be accessed from open market.
 11. **The inequality is maintained**: The system is able to maintain inequality at all times: $$\text{Open Interest} < \text{REP's Discounted Cash Flow}$$
 12. **Access to PLACEHOLDER is valuable**: Users find it valuable to be able to use PLACEHOLDER to access prediction markets and this value is atleast $\text{Security Parameter}$ times higher than the value it secures.
-13. **The system has enough users**: The system encorporated enough users so that 
+13. **The system has enough users**: The system requires enough non-colluding users to function, eg the prediction market trading requires atleast two participants with disagreeing views.
 14. **Ethereum is censorship resistant**: The users should be able to send transactions on ethereum that will be included on the chain in reasonble timeframes.
-15. **Some amount of REP tokens are held by honest reporter**: (todo, the number comes from escalation game and its params)
+15. **Some amount of REP tokens are held by honest reporter**: (todo, the number comes from escalation game / price oracle and its params)
+16. **Non-colluding price oracle reporters**: The Price Oracle has atleast two non-colluding price reporters that are willing to risk certain amount of REP and ETH per each price oracle report
 
 ## System Overview
 ![image](images/SystemFlow.png)
