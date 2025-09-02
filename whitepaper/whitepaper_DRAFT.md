@@ -195,3 +195,5 @@ Introduce global limits on OI and REP that gradually increase over time. This he
 # Todo's
 - Market Creator bonds migrate to all universes and do not migrate and OI -> we should limit on how much rep there can be in in market creator bonds, and allow migrating REP to migrate their share.
  -> exploit: Right before fork, create 1000 markets so you get your REP duplicated to all universes and you don't have to choose?
+
+ -> Make it so that there's no market creator bonds, but anyone can post a bond to the market and report how they like it, this is then considered as initial report (we could add the market creator a special access for this for some amount of the day?)
