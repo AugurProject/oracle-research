@@ -1,5 +1,22 @@
 # Price Oracle
 
+PLACEHOLDER needs a reliable $\frac{REP}{ETH}$ price oracle for four purposes:
+1) The Escalation Game needs to know how much the Open Interest is worth in REP, to know how much Open Interest is being forcefully locked out from withdrawing because of the delay caused by the game.
+2) The Security Pools have a Local Security Bond minting check:
+```math
+\text{Security Bonds Minted} \leq \frac{\text{Security Deposit}_{REP}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
+```
+3) The Security Pools have a Global Security Bond minting check:
+```math
+\text{Total Security Bonds Minted} \leq \frac{\text{Supply}_{REP}}{\text{Security Multiplier} \cdot \text{Price}_{REP/ETH}}
+```
+4) The liquidation protocol attempts to enforce Local Security Bond limit for each Security pool:
+```math
+\text{Health Factor} = \frac{\text{Staked}_{REP} \cdot \text{Security Multiplier}}{\text{Security Bonds Issued} \cdot \text{Price}_{REP/ETH}} ≥ 1
+```
+
+## PLACEHOLDER's price oracle
+
 The Price Oracle PLACEHOLDER uses is heavily based on the [Open Oracle Design by j0i0m0b0o](https://ethresear.ch/t/proposal-for-a-trust-minimized-price-oracle/22971). 
 
 Open Oracle is an optimistic oracle that allows participants to submit price reports for a token pair (here REP/ETH) and disputes can be raised within a settlement window (10 blocks) if a report is deemed inaccurate. We assume that an Ethereum validator cannot censor 10 blocks in a row to timeout the oracle, making the price oracle to resolve into wrong price.
@@ -10,7 +27,6 @@ The system involves three stages:
 3) **Dispute mechanism** - Other participants can dispute the report by submitting a better price by swapping against previous disputer and posting escalated amount of money at stake (up to ).
 4) **Timeout** - If no disputes are posted after 10 blocks (settlement window), the oracle finalizes and the final price is reported. The final disputers stake is returned and Initial Reporter Bounty is paid.
 
-## Initial Reporting
 ## Initial Reporting
 
 The Price Oracle operates by having an initial reporter submit a price report while staking both REP and ETH. Specifically:
@@ -313,3 +329,7 @@ This prevents the system from inflating rewards too quickly.
 stages?
 - We could probably use Open Oracle directly
 - Gas fee can change, and escalation% should increase to accommodate increased gas costs
+- Todo: instead of using system fee, change to fee that pays the previous reporter the fee instead, this solves the problem on what to do with rep/eth the protocol gains and also is more capital efficient/safer for disputers.
+-> I think the cheapest way to delay is:
+-> 1) someone sets correct price
+-> 2) you set the price off by -acccuracy%, then right back to correct, this resets the timer, and you pay the fee once to the other party
