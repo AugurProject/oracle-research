@@ -1,62 +1,62 @@
 # Escalation Game
-PLACEHOLDER's Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake $REP$ on each respective side. $REP$ Holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation Game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
+PLACEHOLDER's Escalation Game is a [War of Attrition](https://en.wikipedia.org/wiki/War_of_attrition_(game)) kind of game where three different potential market resolution outcomes (Invalid, Yes, No) stake REP on each respective side. REP Holders can choose to participate on any side of the battle and even participate on multiple sides. The Escalation Game ends with one of the following outcomes: `INVALID`, `YES`, `NO`, or `FORK`.
 
-The game starts if someone stakes more than **Market Creator Bond** on a different outcome than Initial Reporter/Designated Reporer reported on before **Dispute Period Length** runs out. If this doesn't happen during the time period the outcome proposed by the reporter is finalized.
+The game starts if someone stakes more than Market Creator Bond on a different outcome than Initial Reporter before Dispute Period Length runs out. If this doesn't happen during the time period the outcome proposed by the reporter is finalized.
 
-If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit $REP$ on any side. The game functions as a War of Attrition: Escalating the battle becomes increasingly expensive over time. The cost to participate for each side grows over time, following this formula:
+If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit REP on any side. The game functions as a War of Attrition: Escalating the battle becomes increasingly expensive over time. The cost to participate for each side grows over time, following formula:
 
 ```math
 \text{Attrition Cost} = \text{matchedRepInvestment(Time Since Start)} = \max(
 \frac{\text{OpenInterestHarm(Time Since Start)}}{2\cdot \text{BurnShare}}, \text{Fork Treshold} \cdot \left(\frac{\text{Time Since Start}}{\text{Time Limit}}\right)^k)
 ```
 
-In the equation $\text{OpenInterestHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea is to always burn more $REP$ than we estimate delayers can gain by delaying the Open Interest from resolving.
+In the equation $\text{OpenInterestHarm(Time Since Start)}$ is a cost function that is an estimation on how much Open Interest holders of the delayed market are being harmed. The idea is to always burn more REP than we estimate delayers can gain by delaying the Open Interest from resolving.
 
 $\text{BurnShare}$ is a fraction of the participating REP that gets burnt, We are using $\text{BurnShare}=\frac{1}{5}$. $\text{Fork Treshold}$ is amount of REP that needs to be contributed to the game at least for the market to fork. If open interest is zero for the market, this is the cost that needs to be paid by each side to fork the market, however, if there's Open Interest in the market, then the fork cost is higher.
 
 $\text{Time Limit} = 7$ weeks is the max amount the Escalation Game lasts. And $k = 5$ is a parameter that can be used to adjust the steepness of the escalation game curve.
 
-The system will then burn $\text{repBurn(Time Since Start)}$ amount of rep:
+The system will then burn $\text{repBurn(Time Since Start)}$ amount of REP:
 ```math
 \text{repBurn(Time Since Start)} = 2 \cdot \text{BurnShare} \cdot \text{matchedRepInvestment(Time Since Start)} 
 ```
 
 # Winning the game
-If, at any point in time, only one side has successfully paid the Attrition Cost, the battle ends and that outcome is finalized for the amrket.
+If, at any point in time, only one side has successfully paid the Attrition Cost, the battle ends and that outcome is finalized for the market.
 
-Alternatively, the battle ends in a fork if **two or more sides** each manage to deposit the full $\text{Fork Threshold}$ amount of REP. It is not possible to deposit more than the $\text{Fork Threshold}$ on any single side.
+Alternatively, the battle ends in a fork if **two or more sides** manage to deposit the full $\text{Attrition Cost(7 weeks)}$ amount of REP. It is not possible to deposit more than that on any single side.
 
-The winner of escalation game (either by timeout, or by fork for each side) profits:
+The winner of the escalation game (either by timeout, or by fork for each side) gets return on investment:
 ```math
-\text{Total Profit in REP} = \frac{2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start)} + \text{overStake}}{\text{matchedRepInvestment(Time Since Start)}+ \text{overStake}} - 1 \geq \text{Expected Profit}
+\text{Return On Investment} = \frac{2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start)} + \text{overStake}}{\text{matchedRepInvestment(Time Since Start)}+ \text{overStake}} - 1
 ```
 
-In this equation $\text{overStake}$ is amount of $REP$ the winning side can stake over the matched REP investment while still being rewarded for their stake. The purpose of this parameter is to allow winning side to always stake more to be sure the market resolves in their favor. It's always profitable for winning side to stake at most half more of $\text{matchedRepInvestment(Time Since Start)}$ than the losing side to still gain expected profit of 40%.
+In this equation $\text{overStake}$ is amount of REP the winning side can stake over the matched REP investment while still being rewarded for their stake. The purpose of this parameter is to allow winning side to always stake more to be sure the market resolves in their favor and have enough time to react if it gets macthed by the opposin side. It's always profitable for winning side to stake at most half more of $\text{matchedRepInvestment(Time Since Start)}$ than the losing side to still gain expected profit of 40%.
 
--TODO: of we end up in fork, overStake = 0, and the expected profit is 80%, is this harmful, could we just burn the excess?
+If the game ends up in a fork, the sides are rewarded 80% instead, as its not possible to over stake over the maxium amount.
 
-## OpenInterestHarm Modeling
-OpenInterestHarm is modelled as follows:
+## Open Interest Harm Modeling
+The harm that is caused for Open Interest Holders of the market (capital lockup) can be modeled as follows:
 ```math
-\text{OpenInterestHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{OiFee} \cdot \text{Time Since Start} \cdot \frac{REP}{ETH}
+\text{OpenInterestHarm(Time Since Start)} = \alpha\cdot\text{Single Market Open Interest} \cdot \text{Open Interest Fee} \cdot \text{Time Since Start} \cdot \frac{REP}{ETH}
 ```
 
-In this function, $\text{OiFee}$ represents the estimated per-second cost to keep Open Interest locked for an extended period, while REP/ETH denotes the estimated REP to ETH price ratio. The price oracle does not need to be perfectly precise because winners expect to earn a substantial profit; small inaccuracies in the price can be absorbed within that profit margin. The parameter α = 1.5 serves as a safety factor and can be increased to account for larger inaccuracies in both the price oracle and the $\text{OiFee}$ estimation.
+In this function, $\text{Open Interest Fee}$ represents the estimated per-second cost to keep Open Interest locked for an extended period, while REP/ETH denotes the estimated REP's price in ETH. The price oracle does not need to be perfectly precise because winners expect to earn a substantial profit; small inaccuracies in the price can be absorbed within that profit margin. The parameter α = 1.5 serves as a safety factor and can be increased to account for larger inaccuracies in both the price oracle and the $\text{Open Interest Fee}$ estimation.
 
 When the game ends, either to timeout or fork:
-1) Winner is paid $2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start) + \text{preStake}}$ $REP$ (where $\text{matchedRepInvestment(Time Since Start)}+\text{preStake}$ is what was invested into the game from this side)
-3) REP is being burnt: $\text{repBurn(Time Since Start)}$ $REP$
+1) Winner is paid $2 \cdot \text{matchedRepInvestment(Time Since Start)} - \text{repBurn(Time Since Start) + \text{preStake}}$ REP (where $\text{matchedRepInvestment(Time Since Start)}+\text{preStake}$ is what was invested into the game from this side)
+3) REP is being burnt: $\text{repBurn(Time Since Start)}$ REP
 
 Since the `REP/ETH` price can change over the course of the game, the system fixes the `REP/ETH` rate at the start of the game. This ensures that both sides receive the same effective price for each second of escalation.
 
 ## Multiple participants for each side
-While the game consists of only three different sides, multiple players can play on each side. Each winning player is rewarded their max 40% profit if they contributed to the War while the game was running and they contributed before $\frac{3}{2}\text{matchedRepInvestment(Game Ended Time)}$ was invested into the winning side.
+While the game consists of only three different sides, multiple players can play on each side. Each winning player is rewarded their min 40% return on investment if their stake ends up contributing to the War while the game was running and they contributed before $\frac{3}{2}\text{matchedRepInvestment(Game Ended Time)}$ was invested into the winning side.
 
-## Estimating OiFee
+## Estimating Open Interest Fee
 
-Assume that an attacker gets paid 
+Let's assume that an attacker gets paid 
 ```math
-\text{pay(Time Since Start)} = \frac{REP}{ETH}\cdot\text{Single Market Open Interest}\cdot\text{OiFee}\cdot \text{Time Since Start}
+\text{pay(Time Since Start)} = \frac{REP}{ETH}\cdot\text{Single Market Open Interest}\cdot\text{Open Interest Fee}\cdot \text{Time Since Start}
 ```
 for delaying the game for $\text{Time Since Start}$ seconds. it also costs:
 ```math
@@ -79,9 +79,9 @@ We can compute how much delayers were willing to burn for delaying a market as:
 \end{cases}
 ```
 
-We can then create estimator for $\text{OiFee}$ as:
+We can then create estimator for $\text{Open Interest Fee}$ as:
 ```math
-\text{OiFee} = \max(\frac{\sum_{m \in \text{All Finalized Markets}}\text{\text{Burn Rate}}_m \cdot \text{Single Market Open Interest}_m}{\sum_{m \in \text{All Finalized Markets}}\text{Single Market Open Interest}_m},\text{Min OIFee})
+\text{Open Interest Fee} = \max(\frac{\sum_{m \in \text{All Finalized Markets}}\text{\text{Burn Rate}}_m \cdot \text{Single Market Open Interest}_m}{\sum_{m \in \text{All Finalized Markets}}\text{Single Market Open Interest}_m},\text{Min Open Interest Fee})
 ```
 
 A big assumption made here is that we assume that all the REP getting burned is being spent because one wants to delay the market. However, this is not always true, one might participate escalation game as a means of communication or with intent to fork. For this reason we calculate $\frac{d \cdot \text{REP Burned}}{dt}$ at most at midpoint over the escalation game ($t\in[0,\frac{1}{2}\text{Time Limit}]$).
@@ -94,7 +94,7 @@ In other words, **it is not necessary to be part of the battle from the beginnin
 
 ## Capping the Capital
 
-A single escalation described above still shares a core vulnerability with Augur V2:
+A single escalation game described above still shares a core vulnerability with Augur V2:
 An attacker can initiate multiple disputes across many markets simultaneously. Unless honest participants have enough capital to defend all of them, attackers can overwhelm the system.
 
 To address this we introduce a priority queue and a global capital cap.

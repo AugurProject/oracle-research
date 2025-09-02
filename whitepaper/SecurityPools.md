@@ -62,3 +62,7 @@ REP holders participating in Security Pools managed by others should exercise ca
 | Parameter                     | Value                  |
 | ----------------------------- | ---------------------- |
 | Security Parameter            | 2                      |
+
+
+## Todo
+- We probably need some limit on how small pools can be (both REP and OI side), eg Maker's CDP's have limit for these to allow liquidators to be profitable

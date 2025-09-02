@@ -333,3 +333,5 @@ stages?
 -> I think the cheapest way to delay is:
 -> 1) someone sets correct price
 -> 2) you set the price off by -acccuracy%, then right back to correct, this resets the timer, and you pay the fee once to the other party
+
+- Increase reporting times to 1 hour, would make the game playable by humans too, increaess the jump cost thought

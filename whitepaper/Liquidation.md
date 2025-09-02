@@ -1,53 +1,58 @@
 # Liquidating Security Pools
+If a Security Pool becomes undercollateralized, it will start burning its Security Deposit at an exponentially increasing rate. This liquidation process can be stopped or prevented by:
 
-TODO: there's a bug that bing liquidated decreases the REP in pool and thus decrease the liquidation price, but the lazy liquidator doesnt use updated value
-
-
-If a Security Pool becomes undercollateralized, it begins to burn it's **Security Deposit** at an exponential decay rate. This liquidation process can be stopped or avoided by:
-
-1. Depositing additional REP into the pool
-2. Returning (depositing) Complete Sets back into the Security Pool
-3. Waiting for the market price to recover
+1. Adding additional REP into the pool
+2. Returning Complete Sets back into the Security Pool
+3. Hoping for REP price to increase
 4. Waiting for the market associated with the minted Complete Sets to end, after which those sets are no longer counted as outstanding debt for the pool
 5. Moving the debt over to some other security pool
 
 The purpose of the liquidation process is to ensure that Security Pool holders maintain the system’s most important inequality:
 
 $$
-\text{REP MCAP} > \text{Open Interest}
+\text{REP Market Capitalization} > \text{Open Interest}
 $$
 
 If this inequality is violated, the penalty is designed to benefit other REP holders through token burns, as they are the ones who bear the risk before Open Interest holders.
 
 ## Liquidation Process
-Liquidation in PLACEHOLDER is implemented quite differently compared to other liquidation protocols in DeFi or TradFi. We do not need to punish Security Pool holders quickly, nor do we want to rely on highly accurate price oracles. When the liquidator detects that a pool is undercollateralized, it gradually burns the Security Deposit of that pool - a process we call bleed liquidation.
+Liquidation in PLACEHOLDER is implemented somewhat differently compared to other liquidation protocols in DeFi or TradFi. We do not need to punish Security Pool holders quickly, nor do we want to rely on highly accurate price oracles. When the liquidator detects that a pool is undercollateralized, it gradually burns the Security Deposit of that pool - a process we call bleed liquidation.
 
-PLACEHOLDER’s liquidator allows a single keeper to efficiently monitor and trigger liquidations across all Security Pools based on price-driven health factor changes. Instead of requiring multiple keepers or per-pool monitoring, a single keeper - or even an automatic trigger via an Uniswap V4 hook - can liquidate all the pools at once.
+PLACEHOLDER’s liquidator enables a single keeper to monitor and trigger liquidations across all Security Pools whenever price changes affect their health factors. This removes the need for multiple keepers or pool-by-pool monitoring. A single keeper - or even an automated trigger tied to price updates - can initiate or halt liquidations across all pools simultaneously. However, keepers are still required to remove REP from individual pools if a pool remains in liquidation for an extended period (covered later).
 
 The liqudator burns the Security Pools deposit with exponential decay:
 ```math
-\text{Security Deposit}_{\text{time} = 0} = \text{Security Deposit}_{\text{time} = t}  \cdot e^{-\text{Burn Rate} \cdot t}
+\text{Security Deposit}_{\text{time} = t} = \text{Security Deposit}_{\text{time} = 0s}  \cdot 2^{-\text{Burn Rate} \cdot t}
 ```
 
-If the burn is stopped at any point, the decay resets and the burn starts over. The `Burn Rate` is set in such way that after **one week of constant burning, half of the deposit** is burnt.
+If the burn is stopped at any point, the decay resets and the burn starts over again if its applicable. The `Burn Rate` is set in such way that after one week of constant burning, half of the deposit is burnt:
+```math
+\text{BurnRate} = \frac{1}{604800}
+```
 
 ## Health Factor
 
-The health of a Security Pool can be measured using its **Health Factor**:
+The health of a Security Pool can be measured using its Health Factor:
 
 ```math
-\text{Health Factor} = \frac{\text{Staked REP} \cdot \text{Security Multiplier}}{\text{Security Bonds Issued} \cdot \frac{REP}{ETH}}
+\text{Health Factor} = \frac{\text{Security Deposit}_{REP} \cdot \text{Security Multiplier}}{\text{Security Bonds Issued} \cdot \frac{REP}{ETH}}
 ```
 
 Where:
 
-* **Health Factor ≥ 1**: The pool is safe. Higher values indicate stronger collateralization.
-* **Health Factor < 1**: The pool is undercollateralized and subject to liquidation.
+* Health Factor ≥ 1: The pool is safe. Higher values indicate stronger collateralization.
+* Health Factor < 1: The pool is undercollateralized and subject to liquidation.
 
-In this equation, the only variable that changes continuously is the price ratio $\frac{REP}{ETH}$. Other parameters remain fixed unless a pool-specific action occurs. This simplifies the formula to:
+In this equation, the only variables that can change without users input is the price $\frac{REP}{ETH}$ and $\text{Security Deposit}_{REP}$ (liquidation decreases security deposit). Other parameters remain fixed unless a pool-specific action occurs. If position has not been liquidated, the formula simplifies to:
 
 ```math
 \text{Health Factor} = \frac{\text{Constant}}{\frac{REP}{ETH}}
+```
+
+If a liquidation has continued long enough that the Health Factor falls below the Keeper Liquidation Threshold (20%), a keeper may trigger liquidation for that pool and claim:
+
+```math
+\text{Liquidator bonus}_{REP} = \text{Keeper Liquidation Multiplier} \cdot \text{Liquidation Gas Cost} \cdot \text{Base Fee} \cdot \frac{REP}{ETH}
 ```
 
 ## Tracking Undercollateralization Duration
@@ -86,4 +91,6 @@ Since liquidation monitoring doesn't require extremely fine-grained precision, w
 | Parameter                     | Value                  |
 | ----------------------------- | ---------------------- |
 | Security Parameter            | 2                      |
-| Burn Rate                     | ?                      |
+| Burn Rate                     | $\frac{1}{604800}$     |
+| Keeper Liquidation Treshold   | 20%                    |
+| Keeper Liquidation Multiplier | 4                      |
