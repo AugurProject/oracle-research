@@ -79,8 +79,6 @@ Users can obtain Complete Sets or its parts in several ways, E.g:
 ## Trading
 Once a user acquires a Complete Set for a market, they can sell portions of it to take a position. For example, selling all No shares from a Complete Set effectively gives the user a Yes position. If the market resolves to Yes, the user can redeem their Yes shares for 1 ETH each while keeping the profit from the previously sold No shares.
 
-In most cases, Complete Sets are redeemable for 1 ETH (though there are exceptions [TODO: clarify exceptions here]).
-
 Market shares can be traded on external platforms. PLACEHOLDER does not provide built-in trading functionality. However, because anyone can create a market on PLACEHOLDER, the platform may accumulate many low-quality or poorly defined markets. This makes it difficult for traders to separate well-structured markets from those that risk resolving as invalid.
 
 To mitigate this, trading platforms can adopt several approaches:
@@ -146,27 +144,25 @@ If the auction fails to raise the necessary ETH then the CASH contract's redempt
 
 In the case of auction failure to raise enough ETH to cover traders before minting 1000x of migrated supply of REP, all auction participants will be refunded and the auction will be cancelled. The universe will shutdown except for withdraws of OI at a reduced price from their intended value.
 
-## Invalid markets
-- should we adjust Market Creator Bond like augurv2 with invalid markets
-- should we punish market creator for making invalid market by burning the stake?
+## Market Duration
+The longer a market exists on PLACEHOLDER, the higher likelihood is that the markets complete sets are not backed by bigger amount of REP held in security pools. The longer markets are thus more vulnerable than shorter markets. For this reason, PLACEHOLDER, limits markets length to maximum of one year ($\text{Max Market Duration}$).
 
-## Long markets
-- hmm, actually you can do longer markets with our current systems, where you can create custom share tokens that can decide on how to use augur oracle, you can choose to ignore the augur market resolution and create new market where do you store the OI once the previous market ends
-- create share token that dumps its OI to some market, then when its close to ending, it withdraws the OI from the market and dumps it to new market
-- there's a risk there thought that augur is full for long time and it fails to take the OI out and put it back
-- but its somewhat low as the OI is in the system at all times, if this operation fails, it means the system is underwater
-- hmm, actually there's also risk that the pools doing this might have been underwater and dont have enough REP to maintain this constructs, and then the long term market token needs to figure out another way to acquire enough OI to augur
+There is a partial way to bypass this limitation. An external system can be set up to create a one-year market and, once it finalizes, launch a new long market. The system would then close the open interest in the previous market and transfer it to the next one. This strategy works as long as PLACEHOLDER allows the same amount of open interest to be created again, which is possible if both the global and local requirements of the security pools are satisfied.
 
 ## Upgrading Protocol
-The PLACEHOLDER supports a voluntary contract upgradings via following protocol:
-1) The upgrading party triggers a fork of the system
-2) REP holders can choose to migrate into the new protocol by migrating into UPGRADE universe (and not migrate into YES,NO or INVALID outcomes) that is an address supporting the PLACEHOLDER's upgrading protocol.
-3) The new UPGRADE universe receives the REP and the ETH similarly to any other fork option.
-4) The new protocol can choose to refund the party triggering the fork by minting REP for them
+PLACEHOLDER supports voluntary contract upgrades through the following process:
 
-Users choosing not to participate into the protocol upgrade can continue in using the PLACEHOLDER after fork as normal.
+1. The upgrading party initiates a fork of the system.
+2. REP holders may migrate into the UPGRADE universe (instead of YES, NO, or INVALID), which represents the new protocol.
+3. The UPGRADE universe receives REP and ETH in the same way as any other fork branch.
+4. The new protocol may optionally refund the party that triggered the fork by minting REP for them.
+
+Users who choose not to migrate can continue using PLACEHOLDER in the original universe as normal.
 
 ## [Price Oracle](Price%20Oracle.md)
+
+## Ambiguous Markets
+Ambiguous markets are those whose resolution criteria are unclear - they are neither clearly invalid nor clearly valid, but exist in a gray area between the two. PLACEHOLDER cannot fully defend against such markets, so the best approach is to avoid interacting with them altogether.
 
 ## Parameters
 
@@ -182,44 +178,20 @@ Users choosing not to participate into the protocol upgrade can continue in usin
 | REP to ETH Auction Length                            | 1 week                               |
 | Dutch Auction Divisor Range                          | 1 000 000                            |
 | Security Pool Escalation Game Participation Fraction | 50%                                  |
+| Max Market Duration                                  | 1 year                               |
 
 # Open Questions
-- how to fund TWAP / maintain TWAP security?
 - What to do with invalid markets?
 - Should we have turnstile?
-- how to ensure liquidity after forks?
 
-# Vocabulary
+## Random ideas (not planned to be implemented for now)
 
-| Term                       | Description              |
-| ------------------------------- | ------------------ |
-| Token | |
-| REP | |
-| ETH | |
-| FORK | |
-| Minting Tokens | Minting means creating tokens out of nowhere. |
-**Market Description**
-**Market End Date**
-**Designated Reporter**
-**Market Creator Bond**
+### Speed limit on how much OI can be minted
+We could make the system only allow minting certain amount of open interest per day to limit big changes to open interest
 
-# Attacks
-## OI debt cloning attack by Security Pool
-Security Pools security bond debt is cleared when market is finalized and the debt is pushed to global debt. Security pool could generate debt just before markets end to push a lot globa debt. This generaets a lot debt to the system that is being socialized, the cost to do this attack requires to hold REP and then capital lockup of ETH in the markets that are being finalized. This attack can be recreated with the same REP for 
--> Fix this by not releasing security debt when market ends, but when its expected to finalize without escalation game
-
-# Random ideas
-- hmm, one soft limit that we have not thought of: We could only allow minting complete sets with some speed limit
-- add global limits to OI and REP that increase over time. To try to phis out attackers of the system as early as possible and limit losses of the system. This could work nicely with artic-tern oracles as they are somewhat parasitic interest resistant
-- todo add analysis on price oracle, how PLACEHOLDER adds liquidity into the pool
-- hmm, we could allow a security vault to burn 20% * forkTreshold * 2 rep at any time to trigger fork instantly (we could allow some crowdsourcer for this as well)
-
-- Oracle security could be maintained by requiring security pool holders to deposit enough rep/eth?
-
-- add designated reporter->initial reporter REP stake swapping option. Do we need this?
+### Add training wheels
+Introduce global limits on OI and REP that gradually increase over time. This helps phase out attackers early while minimizing potential losses to the system.
 
 # Todo's
-- add maximium market length
-- write about unclear markets
 - Market Creator bonds migrate to all universes and do not migrate and OI -> we should limit on how much rep there can be in in market creator bonds, and allow migrating REP to migrate their share.
  -> exploit: Right before fork, create 1000 markets so you get your REP duplicated to all universes and you don't have to choose?
