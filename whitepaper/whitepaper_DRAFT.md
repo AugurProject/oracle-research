@@ -228,3 +228,17 @@ We could make the system only allow minting certain amount of open interest per 
 
 ### Add training wheels
 Introduce global limits on OI and REP that gradually increase over time. This helps phase out attackers early while minimizing potential losses to the system.
+
+### Add Turnstile
+
+A turnstile mechanism could be introduced to ensure that REP holders actively participate in the reporting system. This would filter out passive holders who keep REP but fail to defend the system during an attack.
+
+One possible design is that a random market is selected and forced into a fork. This compels REP holders to take an action that is intentionally difficult to automate, thereby proving active engagement.
+
+The turnstile would also gradually reduce the total REP supply, leading to a more accurate measure of active participation in the system. In addition, REP that is no longer accessible (for example, tokens locked behind lost private keys) would effectively be removed, further strengthening the integrity of supply measurements.
+
+### Invalid Market Controller
+
+In Augur V2, the Invalid Market Controller increases the Market Creator Bond size when invalid markets appear, discouraging their creation in the future.
+
+As an additional safeguard, the Market Creator Bond could also be burned if the market ultimately resolves as invalid.
