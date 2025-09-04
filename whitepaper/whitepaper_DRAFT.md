@@ -2,13 +2,11 @@
 
 ## Abstract
 
-PLACEHOLDER is a game-theoretically secure, censorship-resistant oracle and prediction market protocol on Ethereum. The system enables users to create, trade, and resolve prediction markets in a way that aligns incentives toward accurate reporting of real-world outcomes. PLACEHOLDER builds upon the lessons of [Augur V2](https://github.com/AugurProject/whitepaper/releases/download/v2.0.6/augur-whitepaper-v2.pdf) while integrating ideas from decentralized finance (DeFi) protocols such as Maker, Uniswap, Aave, and Curve.
+PLACEHOLDER is a game-theoretically secure, censorship-resistant oracle and prediction market protocol built on Ethereum. It allows users to create, trade, and resolve prediction markets while aligning incentives toward accurate reporting of real-world outcomes.
+
+The design builds on the lessons of [Augur V2](https://github.com/AugurProject/whitepaper/releases/download/v2.0.6/augur-whitepaper-v2.pdf), with a key improvement: PLACEHOLDER is significantly more resistant to the parasitic interest problem described in the Augur V2 paper - a challenge long believed to be unsolvable.
 
 At its core, PLACEHOLDER is built on the assumption that users will continue to adopt and support the honest version of the protocol, ensuring that the value of the ecosystem aligns with the truth. To achieve this, PLACEHOLDER introduces several novel mechanisms - including Truth Auctions, Open Interest Migration, Liquid Escalation Games, Security Pools, and fork-based protocol upgrades - to deliver a fully decentralized prediction market that operates without reliance on even a single centralized components.
-
-## Introduction
-
-Bringing real-world event information on-chain in a trustless way on Ethereum has proven to be a very challenging problem. Current solutions in the space typically rely on multisignatures controlled by a small group of participants, where punishments for misbehavior are relatively weak and ultimately trust-based. The core issue with such trust-based designs is their vulnerability to an "exit scam": a scenario in which participants abandon their long-term reputation to execute a single large-scale exploit, extracting maximum value from the system before disappearing.
 
 ## PLACEHOLDER Security Assumption
 
@@ -42,17 +40,22 @@ PLACEHOLDER's design is based on a set of core assumptions. While the system inc
 - todo, add price oracle
 
 ### System Participants
-- REP Holders
-- OI holders
-- Traders (yes,no,invalid holders)
+PLACEHOLDER involves several types of participants. Below, we list the roles of participants that influence the behavior of the system.
+
+- PLACEHOLDER market creators
+- Traders (yes, no, invalid share holders)
+- Open Interest holders
+- REP holders
+- REP reporters
 - Security Pool holders
-- Keepers
-- Market Makers
+- Liquidation keepers
+- PLACEHOLDER share market makers
 - REP/ETH traders
-- Escalation Game Participants
-- Auction Participants
-- Price Oracle Stakers
-- Price Orace Arbitragers
+- REP/ETH market makers
+- Escalation Game participants
+- Truth Auction participants
+- Price Oracle reporters
+- Price Orace arbitragers
 
 ## Creating Prediction Markets
 Anyone can create a prediction market on PLACEHOLDER. To create a market you need to
@@ -117,7 +120,9 @@ Universe is a system that holds it's own Reputation token, it's own markets, its
 The fork state lasts $\text{Fork Duration}$.
 
 ### REP Migration
-All REP holders will have $\text{Fork Duration}$ amount of time to migrate their REP to one of the child universes. Any REP that participated in the escalation game that triggered the fork automatically migrates to the universe it was staked on. The REP in other escalation games is released and the owner of it can choose any child universe it belongs into. Exception to this is the REP staked as **Market Creator Bond** which gets migrated into all universes.
+All REP holders will have $\text{Fork Duration}$ amount of time to migrate their REP to one of the child universes. Any REP that participated in the escalation game that triggered the fork automatically migrates to the universe it was staked on. The REP in other escalation games is released and the owner of it can choose any child universe it belongs into.
+
+Market Creator Bonds are returned to the market creators. After this point, existing markets no longer have a Market Creator Bond attached. Once such a market ends, anyone can submit the initial report by posting a REP bond along with their report.
 
 #### Security Pool Migration
 When PLACEHOLDER undergoes a fork, the security pools fork as well. The Security Pool Controller must determine how much REP to migrate into each forked branch. The Controller can split REP across multiple branches, which is particularly useful when managing REP on behalf of multiple users rather than a single account.
@@ -149,6 +154,37 @@ The longer a market exists on PLACEHOLDER, the higher likelihood is that the mar
 
 There is a partial way to bypass this limitation. An external system can be set up to create a one-year market and, once it finalizes, launch a new long market. The system would then close the open interest in the previous market and transfer it to the next one. This strategy works as long as PLACEHOLDER allows the same amount of open interest to be created again, which is possible if both the global and local requirements of the security pools are satisfied.
 
+## Market Creator Bond Size
+
+The Market Creator Bond serves two main purposes:
+
+1. It ensures that someone will report on the market - otherwise the creator risks losing their bond.
+2. Once the Initial Reporter has submitted a report, the bond provides enough incentive for disputers to challenge it if the report is incorrect.
+
+In addition, the bond must satisfy two requirements:
+
+1. It must be a positive value, so that the Escalation Game can begin.
+2. It must be smaller than the Fork Threshold; otherwise, the escalation process would be skipped entirely.
+
+From the second purpose, we can derive the following lower bound:
+
+```math
+\text{Market Creator Bond} \geq \text{Base Fee Uncertainty Multiplier} \cdot \text{Base Fee} \cdot \text{Gas Amount to Dispute} \cdot (1 + \text{Initial Dispute Profit Expectation})\cdot (1 + \frac{\text{Burn Share}}{2}) \cdot \frac{REP}{ETH}
+```
+
+Where:
+
+* **Gas Amount to Dispute** includes the gas cost of both submitting the dispute and later claiming back the funds.
+* **Base Fee Uncertainty Multiplier = 6** accounts for possible fee increases between the time of dispute and claim.
+* **Initial Dispute Profit Expectation = 100%** should be high enought to incentivize disputor to risk atleast equal amount of rep to profit from. 
+* **Burn Share = 20%**, based on the escalation game rules.
+
+And from the requirements we get that the Market Creator Bond must lie within the range:
+
+```math
+0 < \text{Market Creator Bond} < \text{Fork Threshold}
+```
+
 ## Upgrading Protocol
 PLACEHOLDER supports voluntary contract upgrades through the following process:
 
@@ -169,7 +205,6 @@ Ambiguous markets are those whose resolution criteria are unclear - they are nei
 | Parameter                                            | Value                                |
 | ---------------------------------------------------- | ------------------------------------ |
 | Escalation Game Time Limit                           | 7 weeks                              |
-| Market Creator Bond                                  | 1 / 11 000 000 * 100 % of REP Supply |
 | Fork Theshold                                        | 2.5% of REP Supply                   |
 | Security Multiplier                                  | 2                                    |
 | Fork Duration                                        | 8 weeks                              |
@@ -179,9 +214,11 @@ Ambiguous markets are those whose resolution criteria are unclear - they are nei
 | Dutch Auction Divisor Range                          | 1 000 000                            |
 | Security Pool Escalation Game Participation Fraction | 50%                                  |
 | Max Market Duration                                  | 1 year                               |
+| Base Fee Uncertainty Multiplier                      | 6                                    |
+| Initial Dispute Profit Expectation                   | 100%                                  |
+| Burn Share                                           | 20%                                  |
 
 # Open Questions
-- What to do with invalid markets?
 - Should we have turnstile?
 
 ## Random ideas (not planned to be implemented for now)
@@ -191,9 +228,3 @@ We could make the system only allow minting certain amount of open interest per 
 
 ### Add training wheels
 Introduce global limits on OI and REP that gradually increase over time. This helps phase out attackers early while minimizing potential losses to the system.
-
-# Todo's
-- Market Creator bonds migrate to all universes and do not migrate and OI -> we should limit on how much rep there can be in in market creator bonds, and allow migrating REP to migrate their share.
- -> exploit: Right before fork, create 1000 markets so you get your REP duplicated to all universes and you don't have to choose?
-
- -> Make it so that there's no market creator bonds, but anyone can post a bond to the market and report how they like it, this is then considered as initial report (we could add the market creator a special access for this for some amount of the day?)
