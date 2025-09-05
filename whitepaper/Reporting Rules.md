@@ -47,3 +47,5 @@ TODO: Add example about each rule
 - discuss: the market description is a JSON with parameters, whats correct struture?
 - discuss: traders should dicuss with wider set of people to understand if a market is valid?
 - Consider: i might be nitpicking here, but "excessive time" in rule 9 is a bit vague. i would go with something more clear, like "resolution requires analysis beyond what can be reasonably determined from public, authoritative sources"
+- discuss: sources that might change the information (eg, news websites change news)
+- discuss: information changes when the market is in escalation game
