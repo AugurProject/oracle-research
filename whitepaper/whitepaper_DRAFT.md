@@ -242,3 +242,6 @@ The turnstile would also gradually reduce the total REP supply, leading to a mor
 In Augur V2, the Invalid Market Controller increases the Market Creator Bond size when invalid markets appear, discouraging their creation in the future.
 
 As an additional safeguard, the Market Creator Bond could also be burned if the market ultimately resolves as invalid.
+
+# TODO
+- add CASH management logic, 1 CASH = 1 ETH, except after failed fork

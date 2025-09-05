@@ -34,6 +34,16 @@ B) The market question must cover events that occur between the market's start t
 * If the event occurs outside of these bounds, the market should resolve as Invalid (unless the market description explicitly states otherwise).
 
 ## Examples
-TODO
+TODO: Add example about each rule
 - example about market: "what is the pre-image of hash 0x...."
 - example of subjective market
+- Has X ever won sportsball competition?
+- Will X win sportsball competition?
+- "Is total amount ETH issued this year more than 1 milj ETH?", might require reporters to run a script against an ethereum node
+- "Resolution source: ChatGPT, when provided with this exact question and the pre-prompt ..." -> chatgpt output is personal and openai also can change the underlying model at any time
+
+# TODO
+- discuss: during a fork, everyone need to be able to determine the right universe
+- discuss: the market description is a JSON with parameters, whats correct struture?
+- discuss: traders should dicuss with wider set of people to understand if a market is valid?
+- Consider: i might be nitpicking here, but "excessive time" in rule 9 is a bit vague. i would go with something more clear, like "resolution requires analysis beyond what can be reasonably determined from public, authoritative sources"
