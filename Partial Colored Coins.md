@@ -122,7 +122,7 @@ A more robust approach is to implement time-based fees - fees that increase the 
 
 One simple method to implement time-based fee adjustments is via a [**Bang–bang controller**](https://en.wikipedia.org/wiki/Bang%E2%80%93bang_control):
 ```math
-\text{Fee Change%} = 
+\text{Fee Change Fraction} = 
 \begin{cases}
 +\text{increment} & \text{if } \text{open interest} > \text{Target REP Market Cap} \\\\
 0 & \text{if } \text{open interest} = \text{Target REP Market Cap} \\\\
@@ -134,7 +134,7 @@ Here, `increment` is a tunable parameter that determines how quickly the fee rea
 
 The actual **Open Interest Fee (%)** then evolves over time as:
 ```math
-\text{New Open Interest Fee%} = \text{Previous Open Interest Fee} + \text{Fee Change%} \cdot \Delta time
+\text{New Open Interest Fee Fraction} = \text{Previous Open Interest Fee} + \text{Fee Change Fraction} \cdot \Delta time
 ```
 
 Where:
@@ -202,11 +202,11 @@ where $\text{REP Token Price}_{asset}$ is $REP$ token price in asset, which is a
 ```
 We can then get $REP$'s token price in the same unit as the market cap is calculated, e.g., dollars($):
 ```math
-\text{REP Token Price}_$ = \frac{\text{REP Market Cap}_$}{\text{REP Token Supply}+\sum_{ a \in \text{all assets} }{\text{REP Tokens Minted}_{a}}}
+\text{REP Token Price}_{USD} = \frac{\text{REP Market Cap}_{USD}}{\text{REP Token Supply}+\sum_{ a \in \text{all assets} }{\text{REP Tokens Minted}_{a}}}
 ```
 We then need to have a price oracle for each $asset$ in dollars:
 ```math
-\text{REP Token Price}_{asset} = \frac{\text{REP Token Price}_$}{\text{Asset Token Price}_$}
+\text{REP Token Price}_{asset} = \frac{\text{REP Token Price}_{USD}}{\text{Asset Token Price}_{USD}}
 ```
 
 We can then deduce how much $REP$ we need to mint against each collateral:
