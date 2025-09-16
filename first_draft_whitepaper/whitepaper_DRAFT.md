@@ -67,7 +67,6 @@ Anyone can create a prediction market on PLACEHOLDER. To create a market you nee
 For a market to be considered valid, it must follow the [Reporting Rules](./Reporting%20Rules.md). If a market does not follow these rules, it will be deemed Invalid - which is one of the possible reporting outcomes. PLACEHOLDER only supports markets that resolve to one of three outcomes: Yes, No, or Invalid. Under these assumptions, users can expect each market to resolve accurately based on the real-world event outcome.
 
 ## Minting Market Shares
-
 To trade in a market on PLACEHOLDER, someone must first mint Complete Sets for the market. A Complete Set is a bundle of tokens made up of equal amounts of Yes, No, and Invalid shares, and is tied to a specific market (each market has its own Complete Sets).
 
 Users can obtain Complete Sets or its parts in several ways, E.g:
