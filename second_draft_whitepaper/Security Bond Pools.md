@@ -9,14 +9,16 @@ In this document we describe one way to implement the Security Bond Pools and th
 A single Security Bond Pool enables the end user to have their bets backed in a single external denonimation. For example, ETH Security Bond Pool allows users to deposit REP and mint Security Bonds that back 1 ETH worth of complete sets that can then be used for trading.
 
 ETH Security Pool Implements following features:
+1) **Create Security Pool**
 1) **Deposit REP**: By depositing REP you can mint Security Bonds in a way that:
 ```math
 \text{Security Bonds} < \frac{\text{Security Multiplier}\cdot\text{REP Deposit}}{\frac{REP}{ETH}}
 ```
+2) **Mint Security Bonds**:
+3) **Attach security bonds to a Core Question**
+4) **Liquidate security pool**
 
 # Security Pools
-
-![image](images/SecurityPool.png)
 
 Security Pools in PLACEHOLDER are conceptually somewhat similar to MakerDAO’s Collateralized Debt Positions (CDPs). In MakerDAO, users deposit ETH as collateral to borrow DAI. In PLACEHOLDER, users deposit REP tokens as a Security Deposit and create Security Bonds backed by that REP. Each Security Bond enables its holder to deposit one ETH into PLACEHOLDER and mint one Complete Set for every pair of ETH and Security Bond.
 

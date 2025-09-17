@@ -30,12 +30,13 @@ PLACEHOLDER2 Core implements following functionalities:
 3) **Reply to a Question**: After **Question End Date** has passed for a question, designated reporter can reply to the question, if they fail to do so for 3 days, anyone can reply to the question.
 4) **Dispute a question**: After the designated reporter (or, if absent, the initial reporter) submits an answer, the outcome can be challenged by starting an [Escalation Game](./Escalation%20Game.md).
 5) **Fork**: If an Escalation Game leads to a fork:
-	- Each REP converts into three separate tokens: REP-Yes, REP-No, and REP-Invalid
+	- REP held on each side of the Escalation Game converts into the corresponding forked tokens REP-Yes, REP-No, REP-Invalid
+	- Each REP not in the Escalation Game that triggered the fork converts into three separate tokens: REP-Yes, REP-No, and REP-Invalid
 	- Asking new questions with REP is no longer possible
 	- Questions must instead be created using REP-Yes, REP-No, and REP-Invalid
 	- Already asked, but not finalized questions also fork along with the Question Creator Bond and become their separate questions for each separate REP token
 
-The asked questions should follow rules disussed in [Reporting Rules](./Reporting%20Rules.md) to be considered valid.
+The asked questions should follow rules discussed in [Reporting Rules](./Reporting%20Rules.md) to be considered valid.
 
 ## [Security Bonds Pools Layer](Security%20Bond%20Pools.md)
 
