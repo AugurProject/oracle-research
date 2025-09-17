@@ -36,7 +36,7 @@ When Security Pools are used to mint Complete Sets, they generate debt measured 
 While Security Pools have their local limit on how much Security Bonds they can generate, PLACEHOLDER2 also has a global limit:
 
 ```math
-\text{Total Security Bonds Minted} \leq \frac{\text{Supply}_{REP}}{\text{Security Multiplier} \times \text{Price}_{REP/ETH}}
+\text{Total Security Bonds Minted} \leq \frac{\text{Total REP in Security Pool Registry}}{\text{Security Multiplier} \times \text{Price}_{REP/ETH}}
 ```
 
 Here
