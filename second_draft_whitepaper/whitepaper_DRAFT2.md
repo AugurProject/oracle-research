@@ -38,8 +38,8 @@ PLACEHOLDER2 Core implements following functionalities:
 
 The asked questions should follow rules discussed in [Reporting Rules](./Reporting%20Rules.md) to be considered valid.
 
-## [Seurity Pool Registry](Security%20Bond%20Pools.md)
+## [Seurity Pool Layer](Security%20Pool%20Layer.md)
 
-## Shares Layer
+## [Shares Layer](Shares%20Layer.md)
 
 ## Exchange Layer
