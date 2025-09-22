@@ -1,10 +1,10 @@
-# ETH Security Bond Pool - Getting rid of price oracle
+# ETH Security Vault - Getting rid of price oracle
 
 We can remove the dependency on an ETH price oracle by applying ideas from [Ajna](https://www.ajna.finance/pdf/Ajna_Protocol_Whitepaper_01-11-2024.pdf).
 
 ## Initial Setup
 
-Assume the real ETH/REP exchange rate is 0.5. An ETH Security Bond Pool allows users to create REP-collateralized positions. Three users - Alice, Bob, and Cecilia - each open a position by posting a limit order to sell 100 REP for ETH, with different collateralization levels that determine their liquidation prices:
+Assume the real ETH/REP exchange rate is 0.5. An ETH Security Vault allows users to create REP-collateralized positions. Three users - Alice, Bob, and Cecilia - each open a position by posting a limit order to sell 100 REP for ETH, with different collateralization levels that determine their liquidation prices:
 
 | Position Owner | Security Bonds Minted | Liquidation Price (ETH/REP) | REP Balance | REP Balance in ETH |
 | -------------- | --------------------- | --------------------------- | ----------- | ------------------ |
@@ -18,7 +18,7 @@ Each position creator chooses the liquidation price for their position based on 
 \text{Liquidation Price}_{ETH/REP} = \frac{\text{Security Bonds Minted} \times \text{Security Multiplier}}{\text{REP Balance}}
 ```
 
-A Security Bond can be paired with 1 ETH to form a "Complete Set" for any market on PLACEHOLDER. Complete Sets are denominated in ETH and backed by REP. When the market settles, the Security Bond is released and can be returned to the position to reduce outstanding bond debt.
+A Security Bond can be paired with 1 ETH to form a "Complete Set" for any market on PLACEHOLDER2. Complete Sets are denominated in ETH and backed by REP. When the market settles, the Security Bond is released and can be returned to the position to reduce outstanding bond debt.
 
 ## Liquidation When ETH/REP Falls
 

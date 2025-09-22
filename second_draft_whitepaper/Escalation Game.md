@@ -5,4 +5,8 @@ The game starts if someone stakes more than Market Creator Bond on a different o
 
 If the market is disputed, the battle becomes active. Once a battle is active, anyone may deposit REP on any side. The game functions as a War of Attrition: Escalating the battle becomes increasingly expensive over time. The cost to participate for each side grows over time, following formula:
 
+```math
+\text{Attrition Cost} = \text{Market Creator Bond}\cdot 2^{-\text{Escalation Rate} \cdot t}
+```
+
 [TODO]

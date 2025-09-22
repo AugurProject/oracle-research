@@ -36,6 +36,7 @@ B) The market question must cover events that occur between the market's start t
 ## Examples
 TODO: Add example about each rule
 - example about market: "what is the pre-image of hash 0x...."
+- example of market where the resolution source is not available for everyone (eg, pay wall)
 - example of subjective market
 - Has X ever won sportsball competition?
 - Will X win sportsball competition?
