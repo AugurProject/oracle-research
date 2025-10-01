@@ -31,22 +31,9 @@ enum MarketOutcome {
 	No
 }
 
-enum PriceQueryAction {
-	WithdrawRep,
-	SetSecurityBondAllowance,
-	Liquidate
-}
-
 enum SystemState {
 	Operational,
 	OnGoingAFork
-}
-
-struct PendingPriceQuery {
-	PriceQueryAction priceQueryAction;
-	uint256 amount;
-	address targetVaultAddress;
-	address callerVaultAddress;
 }
 
 uint256 constant MIGRATION_TIME = 8 weeks;
@@ -58,11 +45,13 @@ uint256 constant MIN_FEE = 200;
 uint256 constant FEE_SLOPE1 = 200;
 uint256 constant FEE_SLOPE2 = 600;
 uint256 constant FEE_DIP = 80;
-uint256 constant RAY = 10 ** 27;
+uint256 constant PRICE_PRECISION = 10 ** 18;
 
 // price oracle
 uint256 constant PRICE_VALID_FOR_SECONDS = 1 hours;
 IOpenOracle constant OPEN_ORACLE = IOpenOracle(0x9339811f0F6deE122d2e97dd643c07991Aaa7a29); // NOT REAL ADDRESS, this one is on base
+
+IERC20 constant WETH = IERC20(0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2);
 
 function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uint256 z) {
 	z = n % 2 != 0 ? x : baseUnit;
@@ -74,7 +63,59 @@ function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uin
 	}
 }
 
-contract SecurityPool {
+contract PriceOracleManager {
+	uint256 QueuedPriceDependentTaskReportId;
+	uint256 lastSettlementTimestamp;
+	uint256 lastPrice; // (REP * PRICE_PRECISION) / ETH;
+	IErc20 reputationToken;
+	constructor(IERC20 reputationToken, uint256 lastPrice) {
+		this.reputationToken = reputationToken;
+		this.lastPrice = lastPrice;
+	}
+
+	function requestRepEthPriceAndPerformAction() public {
+		require(QueuedPriceDependentTaskReportId === 0, 'Already pending request');
+		address callbackContract = address(this);
+		bytes4 callbackSelector = this.openOracleReportPrice;
+		uint256 gasConsumedOpenOracleReportPrice = 100000; //TODO
+		uint256 gasConsumedSettlement = 100000; //TODO 
+		// https://github.com/j0i0m0b0o/openOracleBase/blob/feeTokenChange/src/OpenOracle.sol#L100
+		CreateReportParams reportparams = {
+			exactToken1Report: msg.baseFee * 200 / lastPrice, // initial oracle liquidity in token1
+			escalationHalt: reputationToken.getSupply() / 100000, // amount of token1 past which escalation stops but disputes can still happen
+			settlerReward: msg.baseFee * 2 * gasConsumedOpenOracleReportPrice, // eth paid to settler in wei
+			token1Address: address(reputationToken), // address of token1 in the oracle report instance
+			settlementTime: 15 * 12,//~15 blocks // report instance can settle if no disputes within this timeframe
+			disputeDelay: 0, // time disputes must wait after every new report
+			protocolFee: 0, // fee paid to protocolFeeRecipient. 1000 = 0.01%
+			token2Address: address(weth); // address of token2 in the oracle report instance
+			callbackGasLimit: gasConsumedSettlement, // gas the settlement callback must use
+			feePercentage: 10000, // 0.1% atm, TODO,// fee paid to previous reporter. 1000 = 0.01%
+			multiplier: 140, // amount by which newAmount1 must increase versus old amount1. 140 = 1.4x
+			timeType: true, // true for block timestamp, false for block number
+			trackDisputes: false, // true keeps a readable dispute history for smart contracts
+			keepFee: false, // true means initial reporter keeps the initial reporter reward. if false, it goes to protocolFeeRecipient
+			callbackContract: address(this), // contract address for settle to call back into
+			callbackSelector: callbackSelector, // method in the callbackContract you want called.
+			protocolFeeRecipient: address(0x0), // address that receives protocol fees and initial reporter rewards if keepFee set to false
+			feeToken: true //if true, protocol fees + fees paid to previous reporter are in tokenToSwap. if false, in not(tokenToSwap)
+		} //typically if feeToken true, fees are paid in less valuable token, if false, fees paid in more valuable token
+
+		this.QueuedPriceDependentTaskReportId = OPEN_ORACLE.createReportInstance(reportparams);
+	}
+	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) public {
+		require(msg.sender === address(OPEN_ORACLE), 'only open oracle can call');
+		require(reportId == QueuedPriceDependentTaskReportId, 'not report created by us');
+		this.QueuedPriceDependentTaskReportId = 0;
+		this.lastSettlementTimestamp = lastSettlementTimestamp;
+		this.lastPrice = price;
+	}
+	function isPriceValid() public {
+		return this.lastSettlementTimestamp < block.timestamp + PRICE_VALID_FOR_SECONDS;
+	}
+}
+
+contract SecurityPool is PriceOracleManager {
 	Question public question;
 	Zoltar public zoltar;
 	uint256 public securityBondAllowance;
@@ -90,7 +131,6 @@ contract SecurityPool {
 	bool public forkTriggeredTimestamp;
 
 	mapping(address => SecurityVault) public securityVaults;
-	mapping(uint256 => PendingPriceQuery) public pendingPriceQueries;
 	
 	SecurityPool[3] public children;
 	SecurityPool public parent;
@@ -127,13 +167,13 @@ contract SecurityPool {
 	function updateFee() {
 		uint256 timeDelta = block.timestamp - lastUpdatedFeeAccumulator;
 		if (timeDelta == 0) return;
-		uint256 retentionFactor = rpow(this.currentPerSecondFee, timeDelta, RAY);
-		uint256 newEthAmountForCompleteSets = (this.ethAmountForCompleteSets * retentionFactor) / RAY;
+		uint256 retentionFactor = rpow(this.currentPerSecondFee, timeDelta, PRICE_PRECISION);
+		uint256 newEthAmountForCompleteSets = (this.ethAmountForCompleteSets * retentionFactor) / PRICE_PRECISION;
 
 		uint256 feesAccrued = this.ethAmountForCompleteSets - newEthAmountForCompleteSets;
 		this.ethAmountForCompleteSets = newEthAmountForCompleteSets;
 		if (completeSetsMinted > 0) {
-			cumulativeFeePerAllowance += (feesAccrued * RAY) / newEthAmountForCompleteSets;
+			cumulativeFeePerAllowance += (feesAccrued * PRICE_PRECISION) / newEthAmountForCompleteSets;
 		}
 
 		this.lastUpdatedFeeAccumulator = block.timestamp;
@@ -153,7 +193,7 @@ contract SecurityPool {
 	function claimFees(address vault) external {
 		updateFee();
 		uint256 accumulatorDiff = cumulativeFeePerShare - securityVaults[vault].feeAccumulator;
-		uint256 fees = (securityVaults[vault].securityBondAllowance * accumulatorDiff) / RAY;
+		uint256 fees = (securityVaults[vault].securityBondAllowance * accumulatorDiff) / PRICE_PRECISION;
 		securityVaults[vault] = cumulativeFeePerShare;
 		securityVaults[vault].accumulatedEth += fees;
 	}
@@ -168,68 +208,11 @@ contract SecurityPool {
 	}
 
 	////////////////////////////////////////
-	// Price query helpers
-	////////////////////////////////////////
-	function requestRepEthPriceAndPerformAction(PriceQueryAction priceQueryAction, uint256 amount, address targetVaultAddress, address callerVaultAddress) {
-		// allow only one pending request, otherwise join to old request?
-		// allow also using just resolving reports?
-		// we need to calculate how much money we need for this to execute (ETH)
-		// it should be enough to call `openOracleReportPrice` in the end + enough to make disputing and first report profitable for users
-		address callbackContract = address(this);
-		bytes4 callbackSelector = this.openOracleReportPrice;
-		CreateReportParams reportparams = {
-			uint256 exactToken1Report;
-			uint256 escalationHalt;
-			uint256 settlerReward;
-			address token1Address;
-			uint48 settlementTime;
-			uint24 disputeDelay;
-			uint24 protocolFee;
-			address token2Address;
-			uint32 callbackGasLimit;
-			uint24 feePercentage;
-			uint16 multiplier;
-			bool timeType;
-			bool trackDisputes;
-			bool keepFee;
-			address callbackContract;
-			bytes4 callbackSelector;
-		}
-		uint256 priceQueryId = OPEN_ORACLE.createReportInstance(reportparams);
-		pendingPriceQueries[priceQueryId] = {
-			priceQueryAction: priceQueryAction,
-			amount: amount,
-			callerVaultAddress: callerVaultAddress,
-			targetVaultAddress: targetVaultAddress,
-		}
-	}
-
-	// require, I think this should never fail (check open oracle if its fine for this to fail)
-	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) internal isOperational {
-		require(msg.sender == address(OPEN_ORACLE), 'Only Open Oracle can report');
-		require(pendingPriceQueries[reportId] > 0, 'Not a pending query');
-		require(settlementTimestamp < block.timestamp + PRICE_VALID_FOR_SECONDS, 'Settled too long ago');
-
-		if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.WithdrawRep) {
-			performWithdrawRep(pendingPriceQueries[reportId], price);
-		}
-		else if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.SetSecurityBondAllowance) {
-			pendingMintBonds(pendingPriceQueries[reportId], price);
-		}
-		else if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.Liquidate) {
-			pendingLiquidation(pendingPriceQueries[reportId], price);
-		}
-		return;
-	}
-	////////////////////////////////////////
 	// withdrawing rep
 	////////////////////////////////////////
 
-	function initiateWithdrawRep(uint256 amount) public isOperational {
-		requestRepEthPriceAndPerformAction(PriceQueryAction.WithdrawRep, amount, msg.sender, msg.sender);
-	}
-
-	function performWithdrawRep(PendingPriceQuery priceQuery, uint256 price) internal isOperational {
+	function performWithdrawRep() public isOperational {
+		require(isPriceValid(), 'no valid price');
 		// todo, check if price allows this for this vault + whole protocol
 		uint256 repAmount = amount * this.migratedRep / repToken.balanceOf(this);
 		securityVaults[msg.sender].repDepositShare -= amount;
@@ -246,46 +229,41 @@ contract SecurityPool {
 	// liquidating vault
 	////////////////////////////////////////
 
-	function initiateLiquidation(address vaultToLiquidate) public isOperational {
-		requestRepEthPriceAndPerformAction(PriceQueryAction.Liquidate, amount, msg.sender, vaultToLiquidate);
-	}
 	//price = (amount1 * PRICE_PRECISION) / amount2;
 	// price = REP * PRICE_PRECISION / ETH
 	// liquidation moves share of debt and rep to another pool which need to remain non-liquidable
 	// this is currently very harsh, as we steal all the rep and debt from the pool
-	function performLiquidation(PendingPriceQuery priceQuery, uint256 price) internal isOperational {
-		claimFees(priceQuery.targetVaultAddress);
-		claimFees(priceQuery.callerVaultAddress);
+	function performLiquidation(targetVaultAddress: address, amount: uint256) public isOperational {
+		require(isPriceValid(), 'no valid price');
+		claimFees(targetVaultAddress);
+		claimFees(msg.sender);
 		//TODO, add calculation that repshares are not rep directly, use: / this.migratedRep * repToken.balanceOf(this)
 
-		uint256 vaultsSecurityBondAllowance = securityVaults[priceQuery.targetVaultAddress].securityBondAllowance;
-		uint256 vaultsRepDeposit = securityVaults[priceQuery.targetVaultAddress].repDepositShare;
-		require(vaultsSecurityBondAllowance * this.securityMultiplier * PRICE_PRECISION > vaultsRepDeposit * price, 'vault need to be liquidable');
+		uint256 vaultsSecurityBondAllowance = securityVaults[targetVaultAddress].securityBondAllowance;
+		uint256 vaultsRepDeposit = securityVaults[targetVaultAddress].repDepositShare;
+		require(vaultsSecurityBondAllowance * this.securityMultiplier * PRICE_PRECISION > vaultsRepDeposit * lastprice, 'vault need to be liquidable');
 		
-		uint256 debtToMove = priceQuery.amount > securityVaults[priceQuery.callerVaultAddress].securityBondAllowance ? securityVaults[priceQuery.callerVaultAddress].securityBondAllowance : priceQuery.amount;
+		uint256 debtToMove = amount > securityVaults[msg.sender].securityBondAllowance ? securityVaults[msg.sender].securityBondAllowance : priceDependentTask.amount;
 		require(debtToMove > 0, 'no debt to move');
-		uint256 repToMove = securityVaults[priceQuery.callerVaultAddress].repDepositShare * debtToMove / securityVaults[priceQuery.callerVaultAddress].securityBondAllowance;
-		require((securityVaults[priceQuery.callerVaultAddress].securityBondAllowance+debtToMove) * this.securityMultiplier * PRICE_PRECISION <= (securityVaults[priceQuery.callerVaultAddress].repDepositShare + repToMove) * price, 'New pool would be liquidable!');
-		securityVaults[priceQuery.targetVaultAddress].securityBondAllowance -= debtToMove;
-		securityVaults[priceQuery.targetVaultAddress].repDepositShare -= repToMove;
+		uint256 repToMove = securityVaults[msg.sender].repDepositShare * debtToMove / securityVaults[msg.sender].securityBondAllowance;
+		require((securityVaults[msg.sender].securityBondAllowance+debtToMove) * this.securityMultiplier * PRICE_PRECISION <= (securityVaults[msg.sender].repDepositShare + repToMove) * lastprice, 'New pool would be liquidable!');
+		securityVaults[targetVaultAddress].securityBondAllowance -= debtToMove;
+		securityVaults[targetVaultAddress].repDepositShare -= repToMove;
 
-		securityVaults[priceQuery.callerVaultAddress].securityBondAllowance += debtToMove;
-		securityVaults[priceQuery.callerVaultAddress].repDepositShare += repToMove;
+		securityVaults[msg.sender].securityBondAllowance += debtToMove;
+		securityVaults[msg.sender].repDepositShare += repToMove;
 	}
 
 	////////////////////////////////////////
 	// set security bond allowance
 	////////////////////////////////////////
 
-	function initiateSetSecurityBondAllowance(uint256 amount) public isOperational {
-		requestRepEthPriceAndPerformAction(PriceQueryAction.SetSecurityBondAllowance, amount, msg.sender);
-	}
-
-	function performSetSecurityBondsAllowance(priceQuery PendingPriceQuery, uint256 price) internal isOperational {
+	function performSetSecurityBondsAllowance(amount: uint256) public isOperational {
+		require(isPriceValid(), 'no valid price');
 		revert(!canSetSecurityBondAllowance(), 'cannot mint');
-		claimFees(priceQuery.callerVaultAddress);
+		claimFees(msg.sender);
 		// check price if we allow this, check  / this.migratedRep * repToken.balanceOf(this) too
-		require(this.securityBondAllowance+priceQuery.amount < this.ethAmountForCompleteSets, 'minted too many compete sets to allow this');
+		require(amount < this.ethAmountForCompleteSets, 'minted too many compete sets to allow this');
 		uint256 oldAllowance = securityVaults[msg.sender].securityBondAllowance;
 		this.securityBondAllowance += amount;
 		this.securityBondAllowance -= oldAllowance;
