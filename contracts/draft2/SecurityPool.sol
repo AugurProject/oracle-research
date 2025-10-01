@@ -36,6 +36,11 @@ enum PriceQueryAction {
 	Liquidate,
 }
 
+enum SystemState {
+	Operational,
+	OnGoingAFork,
+}
+
 struct PendingPriceQuery {
 	PriceQueryAction priceQueryAction;
 	uint256 amount;
@@ -53,6 +58,9 @@ uint256 constant FEE_SLOPE1 = 200;
 uint256 constant FEE_SLOPE2 = 600;
 uint256 constant FEE_DIP = 80;
 uint256 constant RAY = 10 ** 27;
+
+// price oracle
+uint256 constant PRICE_VALID_FOR_SECONDS = 1 hour;
 
 function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uint256 z) {
 	z = n % 2 != 0 ? x : baseUnit;
@@ -87,11 +95,17 @@ contract SecurityPool {
 	SecurityPool public parent;
 	
 	uint256 public truthAuctionStarted;
-	bool public frozen;
+	SystemState public systemState;
 	
 	IERC20 public completeSet;
 	CustomizedEasyAuction public auction;
 	IERC20 public repToken;
+
+	modifier isOperational {
+		require(!this.zoltar.hasForked(), 'Zoltar has forked');
+		require(this.systemState === SystemState.OnGoingAFork, 'System is not operational');
+		_;
+	}
 
 	constructor(IERC20 repToken, SecurityPool parent, Zoltar zoltar, IOpenOracle openOracle, Question question, uint256 securityMultiplier, uint256 startingFee) {
 		this.repToken = repToken;
@@ -103,14 +117,14 @@ contract SecurityPool {
 		this.currentPerSecondFee = startingFee;
 		if (this.parent === address(0x0)) { // origin universe never does auction
 			this.truthAuctionStarted = 1;
-			this.frozen = false;
+			this.systemState = SystemState.Operational;
 		} else {
-			this.frozen = true;
+			this.systemState = SystemState.OnGoingAFork;
 			this.auction = new CustomizedEasyAuction(); // craete auction instance that can start receive orders right away
 		}
 	}
 
-	function updateFee() {
+	function updateFee() { //todo, after market has ended (not finalized), we should stop paying fees to rep holders?
 		uint256 timeDelta = block.timestamp - lastUpdatedFeeAccumulator;
 		if (timeDelta == 0) return;
 		uint256 retentionFactor = rpow(this.currentPerSecondFee, timeDelta, RAY);
@@ -131,20 +145,27 @@ contract SecurityPool {
 		}
 	}
 
+	// pays open interests fees to a single vault
+	// I think we want this not to pay instantly, but make it accrue into some value and then make separate function to pay
 	function claimFees(address vault) external {
 		updateFee();
-		uint256 deltaIndex = cumulativeFeePerShare - securityVaults[vault].feeAccumulator;
-		uint256 fees = (securityVaults[vault].securityBondAllowance * deltaIndex) / RAY;
+		uint256 accumulatorDiff = cumulativeFeePerShare - securityVaults[vault].feeAccumulator;
+		uint256 fees = (securityVaults[vault].securityBondAllowance * accumulatorDiff) / RAY;
 		securityVaults[vault] = cumulativeFeePerShare;
-		if (fees > 0) { //TODO, we probably want that this can never fail?
+		if (fees > 0) { //TODO, we probably want that this can never fail? We could just accumulate into a variable and les user withdraw on their on as well
 			(bool sent, bytes memory data) = payable(vault).call{value: fees}("");
         	require(sent, "Failed to send Ether");
 		}
 	}
 
+	////////////////////////////////////////
+	// Price query helpers
+	////////////////////////////////////////
 	function requestRepEthPriceAndPerformAction(PriceQueryAction priceQueryAction, uint256 amount, address targetVaultAddress, address: callerVaultAddress) {
 		// allow only one pending request, otherwise join to old request?
 		// allow also using just resolving reports?
+		// we need to calculate how much money we need for this to execute (ETH)
+		// it should be enough to call `openOracleReportPrice` in the end + enough to make disputing and first report profitable for users
 		address callbackContract = address(this);
         bytes4 callbackSelector = this.openOracleReportPrice;
 		uint256 priceQueryId = this.openOracle.createReportInstance(...);
@@ -156,13 +177,11 @@ contract SecurityPool {
 		}
 	}
 
-	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) {
-		if (this.zoltar.hasForked()) return;
-		if (this.frozen) return;
+	// require, I think this should never fail (check open oracle if its fine for this to fail)
+	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) internal isOperational {
 		require(msg.sender === address(this.openOracle), 'Only Open Oracle can report');
 		require(pendingPriceQueries[reportId] > 0, 'Not a pending query');
-		require(settlementTimestamp < block.timestamp + 6000, 'Settled too long ago');
-		// check that the request is not too old?
+		require(settlementTimestamp < block.timestamp + PRICE_VALID_FOR_SECONDS, 'Settled too long ago');
 
 		if (pendingPriceQueries[reportId].priceQueryAction === PriceQueryAction.WithdrawRep) {
 			performWithdrawRep(pendingPriceQueries[reportId], price);
@@ -179,24 +198,18 @@ contract SecurityPool {
 	// withdrawing rep
 	////////////////////////////////////////
 
-	function initiateWithdrawRep(uint256 amount)  {
-		require(!this.zoltar.hasForked(), 'already forked');
-		require(!this.frozen, 'system frozen');
+	function initiateWithdrawRep(uint256 amount) public isOperational {
 		requestRepEthPriceAndPerformAction(PriceQueryAction.WithdrawRep, amount, msg.sender, msg.sender);
 	}
 
-	function performWithdrawRep(PendingPriceQuery priceQuery, uint256 price) internal {
-		require(!this.zoltar.hasForked(), 'already forked');
-		require(!this.frozen, 'system frozen');
+	function performWithdrawRep(PendingPriceQuery priceQuery, uint256 price) internal isOperational {
 		// todo, check if price allows this for this vault + whole protocol
 		uint256 repAmount = amount * this.migratedRep / repToken.balanceOf(this);
 		securityVaults[msg.sender].repDepositShare -= amount;
 		repToken.transfer(address(this), repAmount);
 	}
 	
-	function depositRep(uint256 amount) {
-		require(!this.zoltar.hasForked(), 'already forked');
-		require(!this.frozen, 'system frozen');
+	function depositRep(uint256 amount) public isOperational {
 		uint256 repAmount = amount * repToken.balanceOf(this) / this.migratedRep;
 		securityVaults[msg.sender].repDepositShare += amount;
 		repToken.transferFrom(msg.sender, address(this), repAmount);
@@ -206,16 +219,14 @@ contract SecurityPool {
 	// liquidating vault
 	////////////////////////////////////////
 
-	function initiateLiquidation(address vaultToLiquidate) {
-		require(!this.zoltar.hasForked(), 'already forked');
-		require(!this.frozen, 'system frozen');
+	function initiateLiquidation(address vaultToLiquidate) public isOperational {
 		requestRepEthPriceAndPerformAction(PriceQueryAction.Liquidate, amount, msg.sender, vaultToLiquidate);
 	}
 	//price = (amount1 * PRICE_PRECISION) / amount2;
 	// price = REP * PRICE_PRECISION / ETH
 	// liquidation moves share of debt and rep to another pool which need to remain non-liquidable
 	// this is currently very harsh, as we steal all the rep and debt from the pool
-	function performLiquidation(PendingPriceQuery priceQuery, uint256 price) internal {
+	function performLiquidation(PendingPriceQuery priceQuery, uint256 price) internal isOperational {
 		claimFees(priceQuery.targetVaultAddress);
 		claimFees(priceQuery.callerVaultAddress);
 		//TODO, add calculation that repshares are not rep directly, use: / this.migratedRep * repToken.balanceOf(this)
@@ -236,19 +247,14 @@ contract SecurityPool {
 	}
 
 	////////////////////////////////////////
-	// mint security bonds
+	// set security bond allowance
 	////////////////////////////////////////
 
-	function initiateSetSecurityBondAllowance(uint256 amount) {
-		require(!this.zoltar.hasForked(), 'already forked');
-		require(!this.frozen, 'system frozen');
-		updateFee();
+	function initiateSetSecurityBondAllowance(uint256 amount) public isOperational {
 		requestRepEthPriceAndPerformAction(PriceQueryAction.SetSecurityBondAllowance, amount, msg.sender);
-		this.securityBondsMinted += amount;
-		securityVaults[msg.sender].securityBondAllowance += amount;
 	}
 
-	function performSetSecurityBondsAllowance(priceQuery PendingPriceQuery, uint256 price) internal {
+	function performSetSecurityBondsAllowance(priceQuery PendingPriceQuery, uint256 price) internal isOperational {
 		revert(!canSetSecurityBondAllowance(), 'cannot mint');
 		claimFees(priceQuery.callerVaultAddress);
 		// check price if we allow this, check  / this.migratedRep * repToken.balanceOf(this) too
@@ -263,9 +269,9 @@ contract SecurityPool {
 	////////////////////////////////////////
 	// Complete Sets
 	////////////////////////////////////////
-	function createCompleteSet() payable {
+	function createCompleteSet() payable public isOperational {
 		require(msg.value > 0, 'need to send eth');
-		require(securityBondsMinted - ethAmountForCompleteSets > msg.value, 'no capacity to create that many sets');
+		require(securityBondAllowance - ethAmountForCompleteSets > msg.value, 'no capacity to create that many sets');
 		updateFee();
 		uint256 amountToMint = msg.value * address(this).balance / ethAmountForCompleteSets;
 		completeSet.mint(amountToMint);
@@ -273,7 +279,7 @@ contract SecurityPool {
 		ethAmountForCompleteSets += msg.value;
 	}
 
-	function redeemCompleteSet(uint256 amount) {
+	function redeemCompleteSet(uint256 amount) public isOperational {
 		updateFee();
 		// takes in complete set and releases security bond and eth
 		completeSet.transferFrom(msg.sender, address(this), amount);
@@ -284,7 +290,7 @@ contract SecurityPool {
 		ethAmountForCompleteSets -= ethValue;
 	}
 
-	function redeemShare() {
+	function redeemShare() isOperational public {
 		require(question.finalized(), 'Question has not finalized!');
 		//convertes yes,no or invalid share to 1 eth each, depending on market outcome
 	}
@@ -292,16 +298,19 @@ contract SecurityPool {
 	////////////////////////////////////////
 	// FORKING (migrate vault (oi+rep), truth auction)
 	////////////////////////////////////////
-	function triggerFork() {
-		require(!this.zoltar.hasForked(), 'already forked');
+	function triggerFork() public {
+		require(this.zoltar.hasForked(), 'already forked'); // Zoltar needs to be forked already for to trigger pools fork
+		require(SystemState.Operational, 'System is already undergoing a fork');
 		require(!this.forkTriggeredTimestamp > 0, 'fork already triggered');
+		systemState = SystemState.OnGoingAFork;
 		this.forkTriggeredTimestamp = block.timestamp;
 		this.repAtFork = repToken.balanceOf(this);
 		zoltar.splitREP(universe, amount); // converts origin rep to rep_true, rep_false and rep_invalid
+		// we could pay the caller basefee*2 out of Open interest we have?
 	}
 
 	// migrates vault into outcome universe after fork
-	function migrateVault(MarketOutcome outcome) {
+	function migrateVault(MarketOutcome outcome) public {
 		require(this.forkTriggeredTimestamp > 0, 'fork needs to be triggered');
 		require(this.forkTriggeredTimestamp + MIGRATION_TIME <= block.timestamp, 'migration time passed');
 		require(securityVaults[msg.sender].repDepositShare > 0, 'Vault has no rep to migrate');
@@ -324,7 +333,7 @@ contract SecurityPool {
 		securityVaults[msg.sender].securityBondAllowance = 0;
 	}
 
-	function migrateRepFromParent(address vault) {
+	function migrateRepFromParent(address vault) public {
 		require(msg.sender === this.parent, 'only parent can migrate');
 		securityVaults[vault].securityBondAllowance = this.parent.securityVaults(vault).securityBondAllowance;
 		securityVaults[vault].repDepositShare = this.parent.securityVaults(vault).repDepositShare;
@@ -333,13 +342,13 @@ contract SecurityPool {
 	}
 
 	// starts an auction on children
-	function startTruthAuction() {
+	function startTruthAuction() public {
 		require(this.forkTriggeredTimestamp + MIGRATION_TIME > block.timestamp, 'migration time needs to pass first');
 		require(this.truthAuctionStarted === 0, 'Auction already started');
 		this.truthAuctionStarted = block.timestamp;
 		if (address(this).balance >= this.parent.ethAmountForCompleteSets) {
 			// we have acquired all the ETH already, no need auction
-			this.frozen = false;
+			this.systemState = SystemState.Operational;
 			this.auction.finalizeAuction();
 		} else {
 			uint256 ethToBuy = this.parent.ethAmountForCompleteSets - address(this).balance;
@@ -347,16 +356,19 @@ contract SecurityPool {
 			this.auction.startAuction(ethToBuy);
 		}
 	}
-	function finalizeTruthAuction() {
-		require(this.truthAuctionStarted + AUCTION_TIME < block.timestamp, 'auction still ongoing');
-		this.frozen = false;
-		this.auction.finalizeAuction();
 
+	function finalizeTruthAuction() public {
+		require(this.truthAuctionStarted + AUCTION_TIME < block.timestamp, 'auction still ongoing');
+		this.auction.finalizeAuction(); // this sends the rep+eth back to this contract
+		this.systemState = SystemState.Operational;
+		/*
+		this code is not needed, just FYI on what can happen after auction:
 		uint256 ourRep = repToken.balanceOf(address(this))
 		if (this.migratedRep > ourRep) {
-			// we migrated more rep than we go back. This means this pools holders need to take a haircut, this is acounted with repricing pools reps
+			// we migrated more rep than we got back. This means this pools holders need to take a haircut, this is acounted with repricing pools reps
 		} else {
 			// we migrated less rep that we got back from auction, this means we can give extra REP to our pool holders, this is acounted with repricing pools reps
 		}
+		*/
 	}
 }
