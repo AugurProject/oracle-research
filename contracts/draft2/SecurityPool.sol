@@ -64,16 +64,17 @@ function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uin
 }
 
 contract PriceOracleManager {
-	uint256 QueuedPriceDependentTaskReportId;
+	uint256 pendingReportId;
 	uint256 lastSettlementTimestamp;
 	uint256 lastPrice; // (REP * PRICE_PRECISION) / ETH;
-	IErc20 reputationToken;
+	IERC20 reputationToken;
+
 	constructor(IERC20 reputationToken, uint256 lastPrice) {
 		this.reputationToken = reputationToken;
 		this.lastPrice = lastPrice;
 	}
 
-	function requestRepEthPriceAndPerformAction() public {
+	function requestPrice() public {
 		require(QueuedPriceDependentTaskReportId === 0, 'Already pending request');
 		address callbackContract = address(this);
 		bytes4 callbackSelector = this.openOracleReportPrice;
@@ -101,15 +102,17 @@ contract PriceOracleManager {
 			feeToken: true //if true, protocol fees + fees paid to previous reporter are in tokenToSwap. if false, in not(tokenToSwap)
 		} //typically if feeToken true, fees are paid in less valuable token, if false, fees paid in more valuable token
 
-		this.QueuedPriceDependentTaskReportId = OPEN_ORACLE.createReportInstance(reportparams);
+		this.pendingReportId = OPEN_ORACLE.createReportInstance{value: msg.baseFee * 2 * (gasConsumedSettlement + gasConsumedOpenOracleReportPrice)}(reportparams);
 	}
+
 	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) public {
 		require(msg.sender === address(OPEN_ORACLE), 'only open oracle can call');
-		require(reportId == QueuedPriceDependentTaskReportId, 'not report created by us');
-		this.QueuedPriceDependentTaskReportId = 0;
+		require(reportId == pendingReportId, 'not report created by us');
+		this.pendingReportId = 0;
 		this.lastSettlementTimestamp = lastSettlementTimestamp;
 		this.lastPrice = price;
 	}
+	
 	function isPriceValid() public {
 		return this.lastSettlementTimestamp < block.timestamp + PRICE_VALID_FOR_SECONDS;
 	}
@@ -224,6 +227,11 @@ contract SecurityPool is PriceOracleManager {
 		securityVaults[msg.sender].repDepositShare += amount;
 		repToken.transferFrom(msg.sender, address(this), repAmount);
 	}
+
+	function queueOperation() {
+
+	}
+
 
 	////////////////////////////////////////
 	// liquidating vault
