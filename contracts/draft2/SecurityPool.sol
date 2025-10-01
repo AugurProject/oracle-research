@@ -22,23 +22,24 @@ struct SecurityVault {
 	uint256 securityBondAllowance;
 	uint256 repDepositShare;
 	uint256 feeAccumulator;
+	uint256 accumulatedEth;
 }
 
 enum MarketOutcome {
 	Invalid,
 	Yes,
-	No,
+	No
 }
 
 enum PriceQueryAction {
 	WithdrawRep,
 	SetSecurityBondAllowance,
-	Liquidate,
+	Liquidate
 }
 
 enum SystemState {
 	Operational,
-	OnGoingAFork,
+	OnGoingAFork
 }
 
 struct PendingPriceQuery {
@@ -48,7 +49,7 @@ struct PendingPriceQuery {
 	address callerVaultAddress;
 }
 
-uint256 constant MIGRATION_TIME = 2 months;
+uint256 constant MIGRATION_TIME = 8 weeks;
 uint256 constant AUCTION_TIME = 1 weeks;
 
 // fees
@@ -60,7 +61,8 @@ uint256 constant FEE_DIP = 80;
 uint256 constant RAY = 10 ** 27;
 
 // price oracle
-uint256 constant PRICE_VALID_FOR_SECONDS = 1 hour;
+uint256 constant PRICE_VALID_FOR_SECONDS = 1 hours;
+IOpenOracle constant OPEN_ORACLE = IOpenOracle(0x9339811f0F6deE122d2e97dd643c07991Aaa7a29); // NOT REAL ADDRESS, this one is on base
 
 function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uint256 z) {
 	z = n % 2 != 0 ? x : baseUnit;
@@ -74,7 +76,6 @@ function rpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uin
 
 contract SecurityPool {
 	Question public question;
-	IOpenOracle public openOracle;
 	Zoltar public zoltar;
 	uint256 public securityBondAllowance;
 	uint256 public ethAmountForCompleteSets;
@@ -82,7 +83,7 @@ contract SecurityPool {
 	uint256 public repAtFork;
 	uint256 public securityMultiplier;
 	
-	uint256 public cumulativeFeePerAllowance
+	uint256 public cumulativeFeePerAllowance;
 	uint256 public lastUpdatedFeeAccumulator;
 	uint256 public currentPerSecondFee;
 
@@ -103,19 +104,18 @@ contract SecurityPool {
 
 	modifier isOperational {
 		require(!this.zoltar.hasForked(), 'Zoltar has forked');
-		require(this.systemState === SystemState.OnGoingAFork, 'System is not operational');
+		require(this.systemState == SystemState.OnGoingAFork, 'System is not operational');
 		_;
 	}
 
-	constructor(IERC20 repToken, SecurityPool parent, Zoltar zoltar, IOpenOracle openOracle, Question question, uint256 securityMultiplier, uint256 startingFee) {
-		this.repToken = repToken;
+	constructor(SecurityPool parent, Zoltar zoltar, Question question, uint256 securityMultiplier, uint256 startingFee) {
+		this.repToken = zoltar.getRepToken();
 		this.question = question;
 		this.securityMultiplier = securityMultiplier;
-		this.openOracle = openOracle;
 		this.zoltar = zoltar;
 		this.parent = parent;
 		this.currentPerSecondFee = startingFee;
-		if (this.parent === address(0x0)) { // origin universe never does auction
+		if (this.parent == address(0x0)) { // origin universe never does auction
 			this.truthAuctionStarted = 1;
 			this.systemState = SystemState.Operational;
 		} else {
@@ -124,7 +124,7 @@ contract SecurityPool {
 		}
 	}
 
-	function updateFee() { //todo, after market has ended (not finalized), we should stop paying fees to rep holders?
+	function updateFee() {
 		uint256 timeDelta = block.timestamp - lastUpdatedFeeAccumulator;
 		if (timeDelta == 0) return;
 		uint256 retentionFactor = rpow(this.currentPerSecondFee, timeDelta, RAY);
@@ -137,38 +137,65 @@ contract SecurityPool {
 		}
 
 		this.lastUpdatedFeeAccumulator = block.timestamp;
-		uint256 utilization = this.ethAmountForCompleteSets * 100 / this.securityBondAllowance;
-		if (utilization < FEE_DIP) {
-			this.currentPerSecondFee = MIN_FEE + utilization * FEE_SLOPE1;
+		if (this.question.hasEnded()) { 
+			// this is for question end time, not finalization time, this removes incentive for rep holders to delay the oracle to extract fees
+			this.currentPerSecondFee = 0;
 		} else {
-			this.currentPerSecondFee = MIN_FEE + FEE_DIP * FEE_SLOPE1 + utilization * FEE_SLOPE2;
+			uint256 utilization = this.ethAmountForCompleteSets * 100 / this.securityBondAllowance;
+			if (utilization < FEE_DIP) {
+				this.currentPerSecondFee = MIN_FEE + utilization * FEE_SLOPE1;
+			} else {
+				this.currentPerSecondFee = MIN_FEE + FEE_DIP * FEE_SLOPE1 + utilization * FEE_SLOPE2;
+			}
 		}
 	}
 
-	// pays open interests fees to a single vault
-	// I think we want this not to pay instantly, but make it accrue into some value and then make separate function to pay
 	function claimFees(address vault) external {
 		updateFee();
 		uint256 accumulatorDiff = cumulativeFeePerShare - securityVaults[vault].feeAccumulator;
 		uint256 fees = (securityVaults[vault].securityBondAllowance * accumulatorDiff) / RAY;
 		securityVaults[vault] = cumulativeFeePerShare;
+		securityVaults[vault].accumulatedEth += fees;
+	}
+
+	function redeemFees(address vault) external {
+		uint256 fees = securityVaults[vault].accumulatedEth;
 		if (fees > 0) { //TODO, we probably want that this can never fail? We could just accumulate into a variable and les user withdraw on their on as well
+			securityVaults[vault].accumulatedEth = 0;
 			(bool sent, bytes memory data) = payable(vault).call{value: fees}("");
-        	require(sent, "Failed to send Ether");
+			require(sent, "Failed to send Ether");
 		}
 	}
 
 	////////////////////////////////////////
 	// Price query helpers
 	////////////////////////////////////////
-	function requestRepEthPriceAndPerformAction(PriceQueryAction priceQueryAction, uint256 amount, address targetVaultAddress, address: callerVaultAddress) {
+	function requestRepEthPriceAndPerformAction(PriceQueryAction priceQueryAction, uint256 amount, address targetVaultAddress, address callerVaultAddress) {
 		// allow only one pending request, otherwise join to old request?
 		// allow also using just resolving reports?
 		// we need to calculate how much money we need for this to execute (ETH)
 		// it should be enough to call `openOracleReportPrice` in the end + enough to make disputing and first report profitable for users
 		address callbackContract = address(this);
-        bytes4 callbackSelector = this.openOracleReportPrice;
-		uint256 priceQueryId = this.openOracle.createReportInstance(...);
+		bytes4 callbackSelector = this.openOracleReportPrice;
+		CreateReportParams reportparams = {
+			uint256 exactToken1Report;
+			uint256 escalationHalt;
+			uint256 settlerReward;
+			address token1Address;
+			uint48 settlementTime;
+			uint24 disputeDelay;
+			uint24 protocolFee;
+			address token2Address;
+			uint32 callbackGasLimit;
+			uint24 feePercentage;
+			uint16 multiplier;
+			bool timeType;
+			bool trackDisputes;
+			bool keepFee;
+			address callbackContract;
+			bytes4 callbackSelector;
+		}
+		uint256 priceQueryId = OPEN_ORACLE.createReportInstance(reportparams);
 		pendingPriceQueries[priceQueryId] = {
 			priceQueryAction: priceQueryAction,
 			amount: amount,
@@ -179,20 +206,20 @@ contract SecurityPool {
 
 	// require, I think this should never fail (check open oracle if its fine for this to fail)
 	function openOracleReportPrice(uint256 callbackSelector, uint256 reportId, uint256 price, uint256 settlementTimestamp, address token1, address token2) internal isOperational {
-		require(msg.sender === address(this.openOracle), 'Only Open Oracle can report');
+		require(msg.sender == address(OPEN_ORACLE), 'Only Open Oracle can report');
 		require(pendingPriceQueries[reportId] > 0, 'Not a pending query');
 		require(settlementTimestamp < block.timestamp + PRICE_VALID_FOR_SECONDS, 'Settled too long ago');
 
-		if (pendingPriceQueries[reportId].priceQueryAction === PriceQueryAction.WithdrawRep) {
+		if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.WithdrawRep) {
 			performWithdrawRep(pendingPriceQueries[reportId], price);
 		}
-		else if (pendingPriceQueries[reportId].priceQueryAction === PriceQueryAction.SetSecurityBondAllowance) {
+		else if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.SetSecurityBondAllowance) {
 			pendingMintBonds(pendingPriceQueries[reportId], price);
 		}
-		else if (pendingPriceQueries[reportId].priceQueryAction === PriceQueryAction.Liquidate) {
+		else if (pendingPriceQueries[reportId].priceQueryAction == PriceQueryAction.Liquidate) {
 			pendingLiquidation(pendingPriceQueries[reportId], price);
 		}
-		return
+		return;
 	}
 	////////////////////////////////////////
 	// withdrawing rep
@@ -237,7 +264,7 @@ contract SecurityPool {
 		
 		uint256 debtToMove = priceQuery.amount > securityVaults[priceQuery.callerVaultAddress].securityBondAllowance ? securityVaults[priceQuery.callerVaultAddress].securityBondAllowance : priceQuery.amount;
 		require(debtToMove > 0, 'no debt to move');
-		uint256 repToMove = securityVaults[priceQuery.callerVaultAddress].repDepositShare * debtToMove / securityVaults[priceQuery.callerVaultAddress].securityBondAllowance
+		uint256 repToMove = securityVaults[priceQuery.callerVaultAddress].repDepositShare * debtToMove / securityVaults[priceQuery.callerVaultAddress].securityBondAllowance;
 		require((securityVaults[priceQuery.callerVaultAddress].securityBondAllowance+debtToMove) * this.securityMultiplier * PRICE_PRECISION <= (securityVaults[priceQuery.callerVaultAddress].repDepositShare + repToMove) * price, 'New pool would be liquidable!');
 		securityVaults[priceQuery.targetVaultAddress].securityBondAllowance -= debtToMove;
 		securityVaults[priceQuery.targetVaultAddress].repDepositShare -= repToMove;
@@ -286,12 +313,12 @@ contract SecurityPool {
 		completeSet.burn(amount);
 		uint256 ethValue = amount * ethAmountForCompleteSets / address(this).balance;
 		(bool sent, bytes memory data) = payable(msg.sender).call{value: ethValue}("");
-        require(sent, "Failed to send Ether");
+		require(sent, "Failed to send Ether");
 		ethAmountForCompleteSets -= ethValue;
 	}
 
 	function redeemShare() isOperational public {
-		require(question.finalized(), 'Question has not finalized!');
+		require(question.isFinalized(), 'Question has not finalized!');
 		//convertes yes,no or invalid share to 1 eth each, depending on market outcome
 	}
 
@@ -315,26 +342,26 @@ contract SecurityPool {
 		require(this.forkTriggeredTimestamp + MIGRATION_TIME <= block.timestamp, 'migration time passed');
 		require(securityVaults[msg.sender].repDepositShare > 0, 'Vault has no rep to migrate');
 		claimFees(msg.sender);
-		if (address(children[outcome]) === address(0x0)) {
+		if (address(children[outcome]) == address(0x0)) {
 			uint192 universe = getUniverse(outcome); // how does this work?
 			// first vault migrater creates new pool and transfers all REP to it
 			RepToken repToken = zoltar.getRepToken(universe);
-			children[outcome] = new SecurityPool(RepToken, this, ...);
+			children[outcome] = new SecurityPool(this, this.zoltar, this.question, this.securityMultiplier, this.currentPerSecondFee);
 			children[outcome].ethAmountForCompleteSets = this.ethAmountForCompleteSets;
 			RepToken.transfer(repToken.balanceOf(this), children[outcome]);
 		}
 		children[outcome].migrateRepFromParent(msg.sender);
 
 		// migrate open interest
-		(bool sent, bytes memory data) = payable(msg.sender).call{value: ethAmountForCompleteSets * securityVaults[msg.sender].repDepositShare / this.repAtFork, }("");
-        require(sent, "Failed to send Ether");
+		(bool sent, bytes memory data) = payable(msg.sender).call{value: ethAmountForCompleteSets * securityVaults[msg.sender].repDepositShare / this.repAtFork }('');
+		require(sent, "Failed to send Ether");
 
 		securityVaults[msg.sender].repDepositShare = 0;
 		securityVaults[msg.sender].securityBondAllowance = 0;
 	}
 
 	function migrateRepFromParent(address vault) public {
-		require(msg.sender === this.parent, 'only parent can migrate');
+		require(msg.sender == this.parent, 'only parent can migrate');
 		securityVaults[vault].securityBondAllowance = this.parent.securityVaults(vault).securityBondAllowance;
 		securityVaults[vault].repDepositShare = this.parent.securityVaults(vault).repDepositShare;
 		securityBondAllowance += securityVaults[vault].securityBondAllowance;
@@ -344,7 +371,7 @@ contract SecurityPool {
 	// starts an auction on children
 	function startTruthAuction() public {
 		require(this.forkTriggeredTimestamp + MIGRATION_TIME > block.timestamp, 'migration time needs to pass first');
-		require(this.truthAuctionStarted === 0, 'Auction already started');
+		require(this.truthAuctionStarted == 0, 'Auction already started');
 		this.truthAuctionStarted = block.timestamp;
 		if (address(this).balance >= this.parent.ethAmountForCompleteSets) {
 			// we have acquired all the ETH already, no need auction

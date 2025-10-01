@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+// https://github.com/j0i0m0b0o/openOracleBase/tree/main
+
 interface IOpenOracle {
     struct disputeRecord {
         uint256 amount1;
