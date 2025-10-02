@@ -126,7 +126,7 @@ contract EscalationGame {
 		depositOnOutcomePrivate(designatedReporter, outcome, startingStake);
 	}
 
-	function syncMarket() {
+	function syncMarket() public {
 		require(msg.sender === address(escalationGameManager), 'only manager can call');
 		if (immune) return;
 		uint256 currentTotalPaused = EscalationGameManager.getCurrentTotalPaused();
@@ -135,7 +135,7 @@ contract EscalationGame {
 		lastSyncedPauseDuration = currentTotalPaused;
 	}
 
-	function makeImmune() {
+	function makeImmune() public {
 		require(msg.sender === address(escalationGameManager), 'only manager can call');
 		require(immune === false, 'Already immune!');
 		syncMarket();
@@ -178,7 +178,7 @@ contract EscalationGame {
 		return balance[2];
 	}
 	
-	fuction hasForked() {
+	function hasForked() public {
 		boolean invalidOver = balances[0] >= FORK_THRESHOLD ? 1 : 0;
 		boolean yesOver = balances[1] >= FORK_THRESHOLD ? 1 : 0;
 		boolean noOver = balances[2] >= FORK_THRESHOLD ? 1 : 0;
@@ -186,7 +186,7 @@ contract EscalationGame {
 		return false
 	}
 	
-	function hasGameTimeoutedIfNotForked() returns (boolean ended, uint256 winner){
+	function hasGameTimeoutedIfNotForked() public returns (boolean ended, uint256 winner){
 		uint256 currentTotalCost = totalCost();
 		boolean invalidOver = balances[0] >= currentTotalCost ? 1 : 0;
 		boolean yesOver = balances[1] >= currentTotalCost ? 1 : 0;
@@ -201,7 +201,7 @@ contract EscalationGame {
 		}
 		return (true, Outcome.No)
 	}
-	function depositOnOutcome(address depositor, Outcome outcome, uint256 amount) {
+	function depositOnOutcome(address depositor, Outcome outcome, uint256 amount) public {
 		require(msg.sender === address(escalationGameManager), 'only manager can call');
 		require(!hasForked(), 'System has already forked');
 		(boolean ended, Outcome winner) = hasGameTimeoutedIfNotForked();
@@ -219,7 +219,7 @@ contract EscalationGame {
 		}
 		deposits[outcome].push(deposit)
 	}
-	function withdrawDeposit(uint depositIndex) {
+	function withdrawDeposit(uint depositIndex) public {
 		require(!hasForked(), 'System has forked');
 		(boolean ended, Outcome winner) = hasGameTimeoutedIfNotForked();
 		require(ended, 'System has already timeouted');
@@ -250,7 +250,7 @@ contract EscalationGameManager {
 	uint256 public totalPausedDuration;
 	private address[IMMUNE_MARKETS_COUNT] immuneMarkets;
 
-	function createNewGame(address market, address designatedReporter, uint256 outcome, uint256 startingStake) {
+	function createNewGame(address market, address designatedReporter, uint256 outcome, uint256 startingStake) public {
 		require(escalationGames[market] === address(0x0), 'Game already exists');
 		escalationGames[market] = new EscalationGame(designatedReporter, outcome, startingStake);
 	}
@@ -263,7 +263,7 @@ contract EscalationGameManager {
 		}
 	}
 	
-	function depositToGame(address Market, Outcome outcome, uint256 amount) {
+	function depositToGame(address Market, Outcome outcome, uint256 amount) public {
 		totalBindingCapital -= escalationGames[address].getBindingCapital();
 		escalationGames[address].depositOnOutcome(msg.sender, outcome, amount);
 		uint256 marketBindingCapital = escalationGames[address].getBindingCapital();
@@ -328,7 +328,7 @@ contract EscalationGameManager {
 		priorityQueue.remove(market);
 	}
 
-	function finalizeGame(address market) {
+	function finalizeGame(address market) public {
 		require(!escalationGames[market].hasForked(), 'The market has forked!');
 		require(escalationGames[market].hasGameTimeoutedIfNotForked(), 'The game has not timeouted');
 		internalfinalizeGame(market);

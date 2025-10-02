@@ -192,7 +192,7 @@ contract SecurityPool is PriceOracleManager {
 			}
 		}
 	}
-
+	//I wonder if we want to delay the payments and smooth them out to avoid flashloan attacks?
 	function claimFees(address vault) external {
 		updateFee();
 		uint256 accumulatorDiff = cumulativeFeePerShare - securityVaults[vault].feeAccumulator;
@@ -203,11 +203,9 @@ contract SecurityPool is PriceOracleManager {
 
 	function redeemFees(address vault) external {
 		uint256 fees = securityVaults[vault].accumulatedEth;
-		if (fees > 0) { //TODO, we probably want that this can never fail? We could just accumulate into a variable and les user withdraw on their on as well
-			securityVaults[vault].accumulatedEth = 0;
-			(bool sent, bytes memory data) = payable(vault).call{value: fees}("");
-			require(sent, "Failed to send Ether");
-		}
+		securityVaults[vault].accumulatedEth = 0;
+		(bool sent, bytes memory data) = payable(vault).call{value: fees}('');
+		require(sent, 'Failed to send Ether');
 	}
 
 	////////////////////////////////////////
@@ -216,8 +214,10 @@ contract SecurityPool is PriceOracleManager {
 
 	function performWithdrawRep() public isOperational {
 		require(isPriceValid(), 'no valid price');
-		// todo, check if price allows this for this vault + whole protocol
 		uint256 repAmount = amount * this.migratedRep / repToken.balanceOf(this);
+		require((securityVaults[msg.sender].repDepositShare - amount) * this.migratedRep / repToken.balanceOf(this) * PRICE_PRECISION > securityVaults[msg.sender].securityBondAllowance * lastprice);
+		require((repToken.getBalance() - amount) * PRICE_PRECISION > securityBondAllowance * lastprice);
+		
 		securityVaults[msg.sender].repDepositShare -= amount;
 		repToken.transfer(address(this), repAmount);
 	}
@@ -229,7 +229,7 @@ contract SecurityPool is PriceOracleManager {
 	}
 
 	function queueOperation() {
-
+		// how to make UX of this nice?
 	}
 
 
@@ -245,21 +245,19 @@ contract SecurityPool is PriceOracleManager {
 		require(isPriceValid(), 'no valid price');
 		claimFees(targetVaultAddress);
 		claimFees(msg.sender);
-		//TODO, add calculation that repshares are not rep directly, use: / this.migratedRep * repToken.balanceOf(this)
-
 		uint256 vaultsSecurityBondAllowance = securityVaults[targetVaultAddress].securityBondAllowance;
-		uint256 vaultsRepDeposit = securityVaults[targetVaultAddress].repDepositShare;
-		require(vaultsSecurityBondAllowance * this.securityMultiplier * PRICE_PRECISION > vaultsRepDeposit * lastprice, 'vault need to be liquidable');
+		uint256 vaultsRepDeposit = securityVaults[targetVaultAddress].repDepositShare * repToken.balanceOf(this) / this.migratedRep;
+		require(vaultsSecurityBondAllowance * this.securityMultiplier * lastPrice > vaultsRepDeposit * PRICE_PRECISION, 'vault need to be liquidable');
 		
 		uint256 debtToMove = amount > securityVaults[msg.sender].securityBondAllowance ? securityVaults[msg.sender].securityBondAllowance : priceDependentTask.amount;
 		require(debtToMove > 0, 'no debt to move');
-		uint256 repToMove = securityVaults[msg.sender].repDepositShare * debtToMove / securityVaults[msg.sender].securityBondAllowance;
-		require((securityVaults[msg.sender].securityBondAllowance+debtToMove) * this.securityMultiplier * PRICE_PRECISION <= (securityVaults[msg.sender].repDepositShare + repToMove) * lastprice, 'New pool would be liquidable!');
+		uint256 repToMove = securityVaults[msg.sender].repDepositShare * repToken.balanceOf(this) / this.migratedRep; * debtToMove / securityVaults[msg.sender].securityBondAllowance;
+		require((securityVaults[msg.sender].securityBondAllowance+debtToMove) * this.securityMultiplier * lastPrice <= (securityVaults[msg.sender].repDepositShare + repToMove) * PRICE_PRECISION, 'New pool would be liquidable!');
 		securityVaults[targetVaultAddress].securityBondAllowance -= debtToMove;
-		securityVaults[targetVaultAddress].repDepositShare -= repToMove;
+		securityVaults[targetVaultAddress].repDepositShare -= repToMove * this.migratedRep / repToken.balanceOf(this);
 
 		securityVaults[msg.sender].securityBondAllowance += debtToMove;
-		securityVaults[msg.sender].repDepositShare += repToMove;
+		securityVaults[msg.sender].repDepositShare += repToMove * this.migratedRep / repToken.balanceOf(this);
 	}
 
 	////////////////////////////////////////
@@ -270,7 +268,9 @@ contract SecurityPool is PriceOracleManager {
 		require(isPriceValid(), 'no valid price');
 		revert(!canSetSecurityBondAllowance(), 'cannot mint');
 		claimFees(msg.sender);
-		// check price if we allow this, check  / this.migratedRep * repToken.balanceOf(this) too
+		require(securityVaults[msg.sender].repDepositShare / this.migratedRep * repToken.balanceOf(this) * PRICE_PRECISION > (securityVaults[msg.sender].securityBondAllowance + amount) * lastprice);
+		require(repToken.getBalance() * PRICE_PRECISION > (securityBondAllowance + amount) * lastprice);
+
 		require(amount < this.ethAmountForCompleteSets, 'minted too many compete sets to allow this');
 		uint256 oldAllowance = securityVaults[msg.sender].securityBondAllowance;
 		this.securityBondAllowance += amount;
@@ -299,7 +299,7 @@ contract SecurityPool is PriceOracleManager {
 		completeSet.burn(amount);
 		uint256 ethValue = amount * ethAmountForCompleteSets / address(this).balance;
 		(bool sent, bytes memory data) = payable(msg.sender).call{value: ethValue}("");
-		require(sent, "Failed to send Ether");
+		require(sent, 'Failed to send Ether');
 		ethAmountForCompleteSets -= ethValue;
 	}
 
@@ -340,7 +340,7 @@ contract SecurityPool is PriceOracleManager {
 
 		// migrate open interest
 		(bool sent, bytes memory data) = payable(msg.sender).call{value: ethAmountForCompleteSets * securityVaults[msg.sender].repDepositShare / this.repAtFork }('');
-		require(sent, "Failed to send Ether");
+		require(sent, 'Failed to send Ether');
 
 		securityVaults[msg.sender].repDepositShare = 0;
 		securityVaults[msg.sender].securityBondAllowance = 0;
@@ -374,6 +374,9 @@ contract SecurityPool is PriceOracleManager {
 		require(this.truthAuctionStarted + AUCTION_TIME < block.timestamp, 'auction still ongoing');
 		this.auction.finalizeAuction(); // this sends the rep+eth back to this contract
 		this.systemState = SystemState.Operational;
+
+		//TODO, if auction fails what do we do?
+
 		/*
 		this code is not needed, just FYI on what can happen after auction:
 		uint256 ourRep = repToken.balanceOf(address(this))
