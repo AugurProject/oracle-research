@@ -42,6 +42,8 @@ contract Auction {
 	function finalizeAuction() public {
 		// auction is finalized, people can withdraw their REP / ETH, the auction sends the left over REP and ETH to fundReceiver
 	}
+	function isFinalized() public pure returns (bool) {
+	}
 }
 ```
 
