@@ -1,5 +1,8 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+// SPDX-License-Identifier: UNICENSE
+import { ReputationToken } from '../ReputationToken.sol';
+import { Zoltar } from '../Zoltar.sol';
+
+pragma solidity 0.8.33;
 
 contract PriorityQueue {
 	struct Entry {
@@ -10,7 +13,7 @@ contract PriorityQueue {
 	Entry[] public heap;
 	mapping(address => uint) public indexInHeap;
 
-	function insertOrUpdate(address user, uint newPriority) external {
+	function insertOrUpdate(address user, uint newPriority) public {
 		if (!_exists(user)) {
 			Entry memory entry = Entry(user, newPriority);
 			heap.push(entry);
@@ -25,7 +28,7 @@ contract PriorityQueue {
 		}
 	}
 
-	function remove(address user) external {
+	function remove(address user) public {
 		require(_exists(user), "User not in heap");
 
 		uint i = indexInHeap[user];
@@ -41,7 +44,7 @@ contract PriorityQueue {
 		}
 	}
 
-	function getTop3() external view returns (Entry[3] memory top) {
+	function getTop3() public view returns (Entry[3] memory top) {
 		for (uint i = 0; i < 3 && i < heap.length; i++) {
 			top[i] = heap[i];
 		}
@@ -107,41 +110,47 @@ struct Deposit {
 	uint256 cumulativeAmount;
 }
 
-address escalationGameManager = EscalationGameManager(0x0)
-uint256 FORK_THRESHOLD = 100000000;
-uint256 FREEZE_THRESHOLD = FORK_THRESHOLD * 2;
-uint256 maxTime = 8 weeks;
-uint256 IMMUNE_MARKETS_COUNT = 3;
+uint256 constant FORK_THRESHOLD = 100000000;
+uint256 constant FREEZE_THRESHOLD = FORK_THRESHOLD * 2;
+uint256 constant maxTime = 8 weeks;
+uint256 constant IMMUNE_MARKETS_COUNT = 3;
 
 contract EscalationGame {
-	private uint256 startingTime;
-	private mapping(Outcome => uint256) balances; //outcome -> amount
-	private mapping(uint256 => Deposit[]) public deposits;
-	public uint256 lastSyncedPauseDuration;
-	public boolean immune;
-	
-	constructor(address designatedReporter, Outcome outcome, uint256 startingStake, uint256 lastSyncedPauseDuration) {
-		startingTime = block.timestamp + 1 week;
-		this.lastSyncedPauseDuration = lastSyncedPauseDuration;
-		depositOnOutcomePrivate(designatedReporter, outcome, startingStake);
+	uint256 public startingTime;
+	uint256[3] public balances; //outcome -> amount
+	mapping(uint256 => Deposit[]) public deposits;
+	uint256 public lastSyncedPauseDuration;
+	bool public immune;
+	IsonzoFront public escalationGameManager;
+	ReputationToken reputationToken;
+
+	constructor(IsonzoFront _escalationGameManager, address designatedReporter, Outcome outcome, uint256 _lastSyncedPauseDuration) {
+		startingTime = block.timestamp + 1 weeks;
+		lastSyncedPauseDuration = _lastSyncedPauseDuration;
+		escalationGameManager = _escalationGameManager;
+		reputationToken = escalationGameManager.reputationToken();
+	}
+
+	function getBalances() public view returns (uint256[3] memory) {
+		return [balances[0], balances[1], balances[2]];
 	}
 
 	function syncMarket() public {
-		require(msg.sender === address(escalationGameManager), 'only manager can call');
+		require(msg.sender == address(escalationGameManager), 'only manager can call');
 		if (immune) return;
-		uint256 currentTotalPaused = EscalationGameManager.getCurrentTotalPaused();
-		uint256 newPaused = currentTotalPaused - m.lastSyncedPauseDuration;
+		uint256 currentTotalPaused = escalationGameManager.currentTotalPaused();
+		uint256 newPaused = currentTotalPaused - lastSyncedPauseDuration;
 		startingTime += newPaused;
 		lastSyncedPauseDuration = currentTotalPaused;
 	}
 
 	function makeImmune() public {
-		require(msg.sender === address(escalationGameManager), 'only manager can call');
-		require(immune === false, 'Already immune!');
+		require(msg.sender == address(escalationGameManager), 'only manager can call');
+		require(immune == false, 'Already immune!');
 		syncMarket();
 		immune = true;
 	}
-	
+
 	function pow(uint256 base, uint256 exp, uint256 scale) internal pure returns (uint256) {
 		uint256 result = scale;
 		while (exp > 0) {
@@ -154,7 +163,7 @@ contract EscalationGame {
 		return result;
 	}
 
-	function totalCost() public view returns (uint256) {
+	function totalCost() public returns (uint256) {
 		syncMarket();
 		uint256 timeFromStart = block.timestamp - startingTime;
 		if (timeFromStart <= 0) return 0;
@@ -169,129 +178,149 @@ contract EscalationGame {
 		uint256 scale = 1e12;
 		return pow(base, timeFromStart, scale);
 	}
+
 	function getBindingCapital() public view returns (uint256) {
-		if ((balance[0] >= balance[1] && balance[0] <= balance[2]) || (balance[0] >= balance[2] && balance[0] <= balance[1])) {
-			return balance[0];
-		} else if ((balance[1] >= balance[0] && balance[1] <= balance[2]) || (balance[1] >= balance[2] && balance[1] <= balance[0])) {
-			return balance[1];
+		if ((balances[0] >= balances[1] && balances[0] <= balances[2]) || (balances[0] >= balances[2] && balances[0] <= balances[1])) {
+			return balances[0];
+		} else if ((balances[1] >= balances[0] && balances[1] <= balances[2]) || (balances[1] >= balances[2] && balances[1] <= balances[0])) {
+			return balances[1];
 		}
-		return balance[2];
+		return balances[2];
 	}
-	
-	function hasForked() public {
-		boolean invalidOver = balances[0] >= FORK_THRESHOLD ? 1 : 0;
-		boolean yesOver = balances[1] >= FORK_THRESHOLD ? 1 : 0;
-		boolean noOver = balances[2] >= FORK_THRESHOLD ? 1 : 0;
+
+	function hasForked() public view returns (bool) {
+		uint8 invalidOver = balances[0] >= FORK_THRESHOLD ? 1 : 0;
+		uint8 yesOver = balances[1] >= FORK_THRESHOLD ? 1 : 0;
+		uint8 noOver = balances[2] >= FORK_THRESHOLD ? 1 : 0;
 		if (invalidOver + yesOver + noOver >= 2) return true;
-		return false
+		return false;
 	}
-	
-	function hasGameTimeoutedIfNotForked() public returns (boolean ended, uint256 winner){
+
+	function hasGameTimeoutedIfNotForked() public returns (bool ended, Outcome winner){
 		uint256 currentTotalCost = totalCost();
-		boolean invalidOver = balances[0] >= currentTotalCost ? 1 : 0;
-		boolean yesOver = balances[1] >= currentTotalCost ? 1 : 0;
-		boolean noOver = balances[2] >= currentTotalCost ? 1 : 0;
-		if (invalidOver + yesOver + noOver >= 2) return (false, 0); // if two or more outcomes aer over the total cost, the game is still going
+		uint8 invalidOver = balances[0] >= currentTotalCost ? 1 : 0;
+		uint8 yesOver = balances[1] >= currentTotalCost ? 1 : 0;
+		uint8 noOver = balances[2] >= currentTotalCost ? 1 : 0;
+		if (invalidOver + yesOver + noOver >= 2) return (false, Outcome.Invalid); // if two or more outcomes aer over the total cost, the game is still going
 		// the game has ended to timeout
 		if (balances[0] > balances[1] && balances[0] > balances[2]) {
-			return (true, Outcome.Invalid)
+			return (true, Outcome.Invalid);
 		}
 		if (balances[1] > balances[0] && balances[1] > balances[2]) {
-			return (true, Outcome.Yes)
+			return (true, Outcome.Yes);
 		}
-		return (true, Outcome.No)
+		return (true, Outcome.No);
 	}
+
 	function depositOnOutcome(address depositor, Outcome outcome, uint256 amount) public {
-		require(msg.sender === address(escalationGameManager), 'only manager can call');
+		require(msg.sender == address(escalationGameManager), 'only manager can call');
 		require(!hasForked(), 'System has already forked');
-		(boolean ended, Outcome winner) = hasGameTimeoutedIfNotForked();
+		(bool ended,) = hasGameTimeoutedIfNotForked();
 		require(!ended, 'System has already timeouted');
-		require(balances[outcome] >= FORK_THRESHOLD, 'Already full');
-		Deposit deposit;
+		require(balances[uint256(outcome)] >= FORK_THRESHOLD, 'Already full');
+		Deposit memory deposit;
 			deposit.depositor = depositor;
 			deposit.amount = amount;
-			deposit.cumulativeAmount = balances[outcome];
-		balances[outcome] += amount;
-		if (balances[outcome] > FORK_THRESHOLD) {
-			//return excess (balances[outcome]-FORK_THRESHOLD)
-			deposit.amount -= balances[outcome] - FORK_THRESHOLD;
-			balances[outcome] = FORK_THRESHOLD;
+			deposit.cumulativeAmount = balances[uint256(outcome)];
+		balances[uint256(outcome)] += amount;
+		if (balances[uint256(outcome)] > FORK_THRESHOLD) {
+			reputationToken.transfer(depositor, balances[uint256(outcome)] - FORK_THRESHOLD);
+			deposit.amount -= balances[uint256(outcome)] - FORK_THRESHOLD;
+			balances[uint256(outcome)] = FORK_THRESHOLD;
 		}
-		deposits[outcome].push(deposit)
+		deposits[uint256(outcome)].push(deposit);
 	}
+
 	function withdrawDeposit(uint depositIndex) public {
 		require(!hasForked(), 'System has forked');
-		(boolean ended, Outcome winner) = hasGameTimeoutedIfNotForked();
+		(bool ended, Outcome winner) = hasGameTimeoutedIfNotForked();
 		require(ended, 'System has already timeouted');
-		Deposit deposit = deposits[winner][depositIndex];
-		require(deposit.depositor === msg.sender, 'Not depositor');
+		Deposit memory deposit = deposits[uint256(winner)][depositIndex];
+		deposits[uint256(winner)][depositIndex].amount = 0;
+		require(deposit.depositor == msg.sender, 'Not depositor');
 		uint256 maxWithdrawableBalance = getBindingCapital();
 		if (deposit.cumulativeAmount > maxWithdrawableBalance) {
-			// return balance without profit, deposited too late to count
-			//return deposit.amount;
-			return
+			reputationToken.transfer(msg.sender, deposit.amount);
 		}
-		if (deposit.cumulativeAmount + deposit.amount; > maxWithdrawableBalance) {
+		else if (deposit.cumulativeAmount + deposit.amount > maxWithdrawableBalance) {
 			uint256 excess = (deposit.cumulativeAmount + deposit.amount - maxWithdrawableBalance);
-			// return (deposit.amount-excess) * 2 + excess;
-			return
+			reputationToken.transfer(msg.sender, (deposit.amount-excess) * 2 + excess);
+		} else {
+			reputationToken.transfer(msg.sender, deposit.amount * 2);
 		}
-		// return deposit.amount * 2;
-		return;
 	}
 }
 
-contract EscalationGameManager {
-	private priorityQueue = new PriorityQueue();
-	private mapping(address => EscalationGame) escalationGames; //market address -> game
-	private uint256 totalBindingCapital;
-	private boolean isFrozen;
-	private uint256 globalFreezeStart;
+contract IsonzoFront is PriorityQueue {
+	mapping(address => EscalationGame) public escalationGames; // market address -> game
+	uint256 public totalBindingCapital;
+	bool public isFrozen;
+	uint256 public globalFreezeStart;
 	uint256 public totalPausedDuration;
-	private address[IMMUNE_MARKETS_COUNT] immuneMarkets;
+	address[IMMUNE_MARKETS_COUNT] public immuneMarkets;
+	ReputationToken public reputationToken;
+	event GameCreated(EscalationGame gameAddress, address market, address designatedReporter, Outcome outcome, uint256 startingStake);
+	event DepositToGame(address market, address designatedReporter, Outcome outcome, uint256 startingStake);
+	event Freeze();
+	// TODO, support forking
+	constructor(Zoltar zoltar) {
+		(reputationToken,,) = zoltar.universes(0);
+	}
 
-	function createNewGame(address market, address designatedReporter, uint256 outcome, uint256 startingStake) public {
-		require(escalationGames[market] === address(0x0), 'Game already exists');
-		escalationGames[market] = new EscalationGame(designatedReporter, outcome, startingStake);
+	function createNewGame(address market, address designatedReporter, Outcome outcome, uint256 startingStake) public {
+		require(address(escalationGames[market]) == address(0x0), 'Game already exists');
+		escalationGames[market] = new EscalationGame{ salt: keccak256(abi.encodePacked(market)) }(this, designatedReporter, outcome, currentTotalPaused());
+		emit GameCreated(escalationGames[market], market, designatedReporter, outcome, startingStake);
+
+		tässä joku bugi, tulee over/underflow
+		_depositToGame(msg.sender, market, outcome, startingStake);
 	}
 
 	function currentTotalPaused() public view returns (uint256) {
 		if (isFrozen) {
-			return totalPausedDuration + (block.timestamp - globalFreezeStart)
+			return totalPausedDuration + (block.timestamp - globalFreezeStart);
 		} else {
-			return totalPausedDuration
+			return totalPausedDuration;
 		}
 	}
-	
-	function depositToGame(address Market, Outcome outcome, uint256 amount) public {
-		totalBindingCapital -= escalationGames[address].getBindingCapital();
-		escalationGames[address].depositOnOutcome(msg.sender, outcome, amount);
-		uint256 marketBindingCapital = escalationGames[address].getBindingCapital();
+
+	function _depositToGame(address depositor, address market, Outcome outcome, uint256 amount) private {
+		emit DepositToGame(depositor, market, outcome, amount);
+		totalBindingCapital -= escalationGames[market].getBindingCapital();
+		reputationToken.transferFrom(depositor, address(escalationGames[market]), amount);
+		escalationGames[market].depositOnOutcome(depositor, outcome, amount);
+		uint256 marketBindingCapital = escalationGames[market].getBindingCapital();
 		totalBindingCapital += marketBindingCapital;
-		priorityQueue.insertOrUpdate(market, marketBindingCapital);
+		insertOrUpdate(market, marketBindingCapital);
 		if (!isFrozen && totalBindingCapital > FREEZE_THRESHOLD) {
 			freezeAll();
 		}
 	}
 
-	
+	function depositToGame(address market, Outcome outcome, uint256 amount) public {
+		_depositToGame(msg.sender, market, outcome, amount);
+	}
+
 	function freezeAll() private {
 		require(!isFrozen, "Already frozen");
+		emit Freeze();
 		isFrozen = true;
 		globalFreezeStart = block.timestamp;
 		updateImmunities();
 	}
+
 	function updateImmunities() private {
-		if (!isFrozen) return
+		if (!isFrozen) return;
 		// handle old immunities
 		uint256 currentImmuneMarkets = 0;
 		uint i = 0;
 		while (i < IMMUNE_MARKETS_COUNT) {
-			const marketAddress = immuneMarkets[i]
-			if (marketAddress === address(0)) continue;
-			if (escalationGames[marketAddress].hasForked() || escalationGames[address].hasGameTimeoutedIfNotForked()) {
+			address marketAddress = immuneMarkets[i];
+			if (marketAddress == address(0)) continue;
+			(bool ended,) = escalationGames[marketAddress].hasGameTimeoutedIfNotForked();
+			if (escalationGames[marketAddress].hasForked() || ended) {
 				internalfinalizeGame(marketAddress);
-				immuneMarkets[i] = 0;
+				immuneMarkets[i] = address(0);
 			}
 			currentImmuneMarkets++;
 		}
@@ -300,19 +329,19 @@ contract EscalationGameManager {
 			return;
 		}
 
-		if (currentImmuneMarkets === IMMUNE_MARKETS_COUNT) return // already at max immune
-		Entry[IMMUNE_MARKETS_COUNT] top = priorityQueue.getTop3();
+		if (currentImmuneMarkets == IMMUNE_MARKETS_COUNT) return; // already at max immune
+		Entry[3] memory top = getTop3();
 		uint256 priorityIndex = 0;
 		// make top3 markets as immune
 		i = 0;
 		while (i < IMMUNE_MARKETS_COUNT) {
-			const marketAddress = immuneMarkets[i];
-			if (marketAddress !== address(0)) continue
+			address marketAddress = immuneMarkets[i];
+			if (marketAddress != address(0)) continue;
 			address newImmuneMarket = top[priorityIndex].user;
-			if (newImmuneMarket === 0) break // run out of markets
+			if (newImmuneMarket == address(0)) break; // run out of markets
 			immuneMarkets[i] = newImmuneMarket;
 			EscalationGame(newImmuneMarket).makeImmune();
-			priorityQueue.remove(newImmuneMarket);
+			remove(newImmuneMarket);
 			priorityIndex++;
 		}
 	}
@@ -325,12 +354,13 @@ contract EscalationGameManager {
 	}
 	function internalfinalizeGame(address market) private {
 		totalBindingCapital -= escalationGames[market].getBindingCapital();
-		priorityQueue.remove(market);
+		remove(market);
 	}
 
 	function finalizeGame(address market) public {
 		require(!escalationGames[market].hasForked(), 'The market has forked!');
-		require(escalationGames[market].hasGameTimeoutedIfNotForked(), 'The game has not timeouted');
+		(bool ended,) = escalationGames[market].hasGameTimeoutedIfNotForked();
+		require(ended, 'The game has not timeouted');
 		internalfinalizeGame(market);
 		if (isFrozen) {
 			if (totalBindingCapital < FREEZE_THRESHOLD) {
