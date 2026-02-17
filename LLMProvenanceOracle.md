@@ -33,5 +33,5 @@ There's couple technological challenges with the design:
 - The websites need to sign the data they provide. Currently it seems like no websites are doing this, even thought there could be protocols that achieve this (eg, OAuth and [JWT](https://www.jwt.io/)). [TLS-notary](https://tlsnotary.org/) or [DECO](https://www.deco.works/) sound like reasonable options, but they require interactive multiparty computation.
 - The Large Language Model needs to be deterministic
 - We need to be able to prove Large Language Model execution. Here [Cartesi](https://cartesi.io/) could work. Proving execution with ZK could be nice, but technically too hard.
-- The model can hallusinate. This probability should be minimized
+- The model can hallucinate. This probability should be minimized
 - The websites can trick the Large Language Model to resolve wrong with prompt injections. This can be alleviated by running the Large Language Model in separate context for each website and each website vote the market to resolve in certain way, then the votes are tallied and majority vote wins.
